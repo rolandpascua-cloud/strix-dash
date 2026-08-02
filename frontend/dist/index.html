@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strix-dash</title>
+<link rel="stylesheet" href="/static/css/strix-dash.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>&#9889;</text></svg>">
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <header class="border-b border-ink-700 bg-ink-900/80 backdrop-blur sticky top-0 z-20 shrink-0">
+    <div class="px-5 py-2.5 flex items-center gap-5 flex-wrap">
+      <div class="flex items-baseline gap-2.5">
+        <span class="font-mono font-bold text-base tracking-tight text-ink-50">strix-dash</span>
+        <span id="host-name" class="text-xs text-ink-400 font-mono"></span>
+      </div>
+
+      <nav class="flex gap-1" role="tablist" aria-label="Sections">
+        <button class="tab tab-active" role="tab" data-page="overview">Overview</button>
+        <button class="tab" role="tab" data-page="compute">Compute</button>
+        <button class="tab" role="tab" data-page="requirements">Requirements</button>
+        <button class="tab" role="tab" data-page="packages">Packages</button>
+        <button class="tab" role="tab" data-page="snapshots">Snapshots</button>
+        <button class="tab" role="tab" data-page="controls">Controls</button>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-3">
+        <span id="conn" class="badge badge-idle">&#9679; connecting</span>
+        <button id="refresh" class="btn" title="Force refresh all sources">&#8635; Refresh</button>
+      </div>
+    </div>
+    <div id="alert-bar" class="hidden px-5 py-2 bg-warn-500/10 border-t border-warn-500/30
+                                text-warn-300 text-sm flex items-center gap-2"></div>
+  </header>
+
+  <main class="grow p-4 min-h-0">
+    <!-- Auto-fit grid with NO max-width container: on a 5120px G9 this yields
+         many columns instead of a centred strip with black margins. -->
+    <section data-page="overview"
+             class="grid gap-4 items-start"
+             style="grid-template-columns:repeat(auto-fit,minmax(420px,1fr))">
+
+      <div class="card" style="min-height:15rem">
+        <div class="card-head"><span class="card-title">NPU stack</span>
+          <span id="npu-badge" class="badge badge-idle">&#8943;</span></div>
+        <div class="card-body" id="npu-panel"></div>
+      </div>
+
+      <div class="card" style="min-height:15rem">
+        <div class="card-head"><span class="card-title">Unified memory</span>
+          <span id="mem-badge" class="badge badge-idle">&#8943;</span></div>
+        <div class="card-body" id="memory-panel"></div>
+      </div>
+
+      <div class="card" style="min-height:15rem">
+        <div class="card-head"><span class="card-title">GPU &mdash; gfx1151</span>
+          <span id="gpu-badge" class="badge badge-idle">&#8943;</span></div>
+        <div class="card-body" id="gpu-panel"></div>
+      </div>
+
+      <div class="card" style="min-height:15rem">
+        <div class="card-head"><span class="card-title">Host</span>
+          <span id="host-badge" class="badge badge-idle">&#8943;</span></div>
+        <div class="card-body" id="host-panel"></div>
+      </div>
+
+      <div class="card" style="min-height:15rem">
+        <div class="card-head"><span class="card-title">Thermals &amp; fans</span></div>
+        <div class="card-body" id="thermal-panel"></div>
+      </div>
+
+      <div class="card" style="min-height:15rem">
+        <div class="card-head"><span class="card-title">Capabilities</span>
+          <span id="cap-badge" class="badge badge-idle">&#8943;</span></div>
+        <div class="card-body" id="capabilities-panel"></div>
+      </div>
+    </section>
+
+    <section data-page="compute" hidden
+             class="grid gap-4 items-start"
+             style="grid-template-columns:repeat(auto-fit,minmax(460px,1fr))">
+      <div class="card" style="min-height:18rem">
+        <div class="card-head"><span class="card-title">NPU &mdash; xrt-smi</span></div>
+        <div class="card-body" id="xrt-panel"></div>
+      </div>
+      <div class="card" style="min-height:18rem">
+        <div class="card-head"><span class="card-title">ROCm agents</span></div>
+        <div class="card-body" id="agents-panel"></div>
+      </div>
+      <div class="card" style="min-height:18rem">
+        <div class="card-head"><span class="card-title">FastFlowLM models</span>
+          <span id="models-badge" class="badge badge-idle">&#8943;</span></div>
+        <div class="card-body" id="models-panel"></div>
+      </div>
+    </section>
+
+    <section data-page="requirements" hidden class="max-w-none">
+      <div class="card"><div class="card-head">
+        <span class="card-title">Requirements</span></div>
+        <div class="card-body" id="requirements-panel">
+          <p class="text-ink-400 text-sm">Not yet implemented (build phase 4b).</p>
+        </div></div>
+    </section>
+
+    <section data-page="packages" hidden>
+      <div class="card"><div class="card-head">
+        <span class="card-title">Curated packages</span></div>
+        <div class="card-body" id="packages-panel">
+          <p class="text-ink-400 text-sm">Not yet implemented (build phase 4).</p>
+        </div></div>
+    </section>
+
+    <section data-page="snapshots" hidden>
+      <div class="card"><div class="card-head">
+        <span class="card-title">Snapshot auditor</span></div>
+        <div class="card-body" id="snapshots-panel">
+          <p class="text-ink-400 text-sm">Not yet implemented (build phase 4).</p>
+        </div></div>
+    </section>
+
+    <section data-page="controls" hidden>
+      <div class="card"><div class="card-head">
+        <span class="card-title">Hardware controls</span></div>
+        <div class="card-body" id="controls-panel">
+          <p class="text-ink-400 text-sm">Not yet implemented (build phase 6).</p>
+        </div></div>
+    </section>
+  </main>
+
+  <footer class="border-t border-ink-700 px-5 py-1.5 text-[0.68rem] text-ink-500
+                 font-mono flex gap-4 flex-wrap shrink-0">
+    <span id="foot-os"></span><span id="foot-kernel"></span><span id="foot-updated"></span>
+  </footer>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

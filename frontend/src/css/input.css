@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-ink-950 text-ink-100 antialiased;
+    font-feature-settings: "tnum" 1;
+  }
+  /* Digits in tables and readouts must not jitter as values update. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-ink-900 border border-ink-700 rounded-md flex flex-col min-h-0;
+  }
+  .card-head {
+    @apply flex items-baseline justify-between gap-3 px-4 py-2.5
+           border-b border-ink-700 shrink-0;
+  }
+  .card-title {
+    @apply text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-ink-400;
+  }
+  .card-body {
+    @apply p-4 overflow-auto grow min-h-0;
+  }
+
+  .kv {
+    @apply flex items-baseline justify-between gap-4 py-1
+           border-b border-ink-800/60 last:border-0;
+  }
+  .kv-k {
+    @apply text-ink-400 text-sm shrink-0;
+  }
+  .kv-v {
+    @apply text-ink-100 text-sm font-medium text-right tabular break-all;
+  }
+
+  /* Status colours are always paired with a glyph -- never colour alone. */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded px-2 py-0.5
+           text-[0.68rem] font-semibold uppercase tracking-wide whitespace-nowrap;
+  }
+  .badge-ok    { @apply bg-ok-500/15   text-ok-300; }
+  .badge-warn  { @apply bg-warn-500/15 text-warn-300; }
+  .badge-crit  { @apply bg-crit-500/15 text-crit-300; }
+  .badge-idle  { @apply bg-ink-700/60  text-ink-300; }
+
+  .meter {
+    @apply h-1.5 w-full rounded-full bg-ink-700 overflow-hidden;
+  }
+  .meter-fill {
+    @apply h-full rounded-full transition-[width] duration-500 ease-out;
+  }
+
+  .btn {
+    @apply inline-flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium
+           border border-ink-600 bg-ink-800 text-ink-100
+           hover:bg-ink-700 hover:border-ink-500
+           focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-500
+           disabled:opacity-40 disabled:cursor-not-allowed transition-colors;
+  }
+
+  .tab {
+    @apply px-3 py-2 text-sm font-medium text-ink-400 border-b-2 border-transparent
+           hover:text-ink-100 focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-accent-500 transition-colors cursor-pointer;
+  }
+  .tab-active {
+    @apply text-ink-50 border-accent-500;
+  }
+
+  .stale {
+    @apply opacity-45 saturate-50 transition-opacity;
+  }
+}
