@@ -40,6 +40,21 @@ def _writable_registry() -> set[Path]:
     return allowed
 
 
+def memlock_limit() -> tuple[int | None, bool]:
+    """This process's RLIMIT_MEMLOCK as (bytes, is_unlimited).
+
+    Distinct from what `flm validate` reports, which is the limit of whichever
+    shell ran it. The service gets its own, set by LimitMEMLOCK= in the unit --
+    /etc/security/limits.conf is applied by PAM and does not reach services.
+    """
+    import resource
+
+    soft, _hard = resource.getrlimit(resource.RLIMIT_MEMLOCK)
+    if soft == resource.RLIM_INFINITY:
+        return None, True
+    return soft, False
+
+
 def find_hwmon(driver_name: str) -> Path | None:
     """Resolve a hwmon directory by its driver name.
 

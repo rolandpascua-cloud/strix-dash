@@ -170,6 +170,30 @@ def _probe_features(sysfs_nodes: dict[str, Any]) -> list[Capability]:
         )
     )
 
+    # NPU tooling maps memory with MAP_LOCKED (xrt-smi wants a single 64 MiB
+    # region), charged against this process's RLIMIT_MEMLOCK. Too low and the
+    # mmap fails with EAGAIN, which the tools report as an opaque exit 1 --
+    # so check it directly and name the cause.
+    limit, unlimited = sysfs.memlock_limit()
+    enough = unlimited or (limit or 0) >= config.MEMLOCK_MINIMUM
+    feats.append(
+        Capability(
+            id="feature:memlock",
+            available=enough,
+            reason=None
+            if enough
+            else f"RLIMIT_MEMLOCK is {limit} bytes; NPU tools need at least "
+            f"{config.MEMLOCK_MINIMUM}",
+            hint=None
+            if enough
+            else (
+                "Set LimitMEMLOCK=infinity in the unit. Note that "
+                "/etc/security/limits.conf does not apply to systemd services."
+            ),
+            detail={"bytes": limit, "unlimited": unlimited},
+        )
+    )
+
     snapshots = config.SNAPSHOT_ROOT.is_dir()
     feats.append(
         Capability(

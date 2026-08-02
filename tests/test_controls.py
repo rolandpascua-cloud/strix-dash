@@ -151,3 +151,40 @@ def test_ppt_nodes_have_no_write_path() -> None:
     allowed = sysfs._writable_registry()
     for name in config.PPT_NODES:
         assert (config.ASUS_PLATFORM / name) not in allowed
+
+
+# ---------------------------------------------------------------------------
+# memlock
+# ---------------------------------------------------------------------------
+
+
+def test_memlock_reports_unlimited_as_unlimited() -> None:
+    """RLIM_INFINITY must not be reported as a huge finite number."""
+    import resource
+    from unittest.mock import patch
+
+    with patch.object(
+        resource, "getrlimit", return_value=(resource.RLIM_INFINITY, resource.RLIM_INFINITY)
+    ):
+        value, unlimited = sysfs.memlock_limit()
+    assert unlimited is True
+    assert value is None
+
+
+def test_memlock_reports_a_finite_limit() -> None:
+    """The 8 MiB systemd default is well under what NPU tooling needs.
+
+    /etc/security/limits.conf is applied by PAM and does not reach services, so
+    a unit without LimitMEMLOCK= silently inherits this and every NPU panel
+    fails with an opaque exit 1.
+    """
+    import resource
+    from unittest.mock import patch
+
+    from backend import config
+
+    with patch.object(resource, "getrlimit", return_value=(8 * 1024**2, 8 * 1024**2)):
+        value, unlimited = sysfs.memlock_limit()
+    assert unlimited is False
+    assert value == 8 * 1024**2
+    assert value < config.MEMLOCK_MINIMUM

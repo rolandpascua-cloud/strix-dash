@@ -121,6 +121,9 @@ FAN_CURVE_FANS = (1, 2)
 PWM_RANGE = (0, 255)
 FAN_TEMP_RANGE = (20, 105)
 
+# xrt-smi maps a single 64 MiB MAP_LOCKED region; allow headroom above it.
+MEMLOCK_MINIMUM = 128 * 1024 * 1024
+
 NPU_DEVICE = Path("/dev/accel/accel0")
 NPU_PMODES = ("default", "powersaver", "balanced", "performance", "turbo")
 

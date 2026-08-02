@@ -20,6 +20,17 @@ SyslogIdentifier=strix-dash
 # Needed to read GPU/NPU device nodes for telemetry.
 SupplementaryGroups=video render
 
+# REQUIRED for any NPU tooling. xrt-smi and flm map the NPU's memory with
+# MAP_LOCKED -- a single 64 MiB region for xrt-smi -- which is charged against
+# RLIMIT_MEMLOCK. Exceeding it fails the mmap with EAGAIN, and the tools report
+# it as an opaque exit-1 rather than a permissions problem.
+#
+# The `* memlock unlimited` line in /etc/security/limits.conf does NOT apply
+# here: that is enforced by PAM, and systemd services do not go through PAM.
+# Without this the unit silently inherits DefaultLimitMEMLOCK (8 MiB), so the
+# NPU panels fail for the service while the same commands work in your shell.
+LimitMEMLOCK=infinity
+
 # --- Filesystem -------------------------------------------------------------
 ProtectSystem=strict
 ProtectHome=true
