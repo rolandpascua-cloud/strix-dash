@@ -59,10 +59,6 @@ function registerJobs() {
   poller.register(job("npu", "overview", 30000, "/telemetry/flm/validate", panels.npu, "npu-panel"));
   poller.register(job("caps", "overview", 60000, "/capabilities", panels.capabilities, "capabilities-panel"));
 
-  // Compute -- slower; xrt-smi is not cheap and rocminfo is cached at startup
-  poller.register(job("xrt", "compute", 10000, "/telemetry/npu", panels.xrt, "xrt-panel"));
-  poller.register(job("agents", "compute", 0, "/telemetry/rocminfo", panels.agents, "agents-panel"));
-  poller.register(job("models", "compute", 0, "/telemetry/flm/models", panels.models, "models-panel"));
 }
 
 function showPage(page) {

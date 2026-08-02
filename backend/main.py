@@ -158,11 +158,32 @@ def _mount_routers() -> None:
 _mount_routers()
 
 
+class RevalidatingStatic(StaticFiles):
+    """Serve assets with must-revalidate.
+
+    The frontend is plain ES modules and one stylesheet, with no content
+    hashing in their filenames. Left to default caching, a browser keeps
+    serving the old bundle after an upgrade -- so a deploy.sh that changes
+    behaviour appears to do nothing until a hard reload.
+
+    ETag/Last-Modified still make revalidation a 304, so this costs a
+    conditional request, not a re-download. The asset is local anyway.
+    """
+
+    def is_not_modified(self, response_headers, request_headers) -> bool:
+        return super().is_not_modified(response_headers, request_headers)
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        return response
+
+
 # Static frontend last, so it cannot shadow the API routes above.
 if config.FRONTEND_DIST.is_dir():
     app.mount(
         "/static",
-        StaticFiles(directory=str(config.FRONTEND_DIST)),
+        RevalidatingStatic(directory=str(config.FRONTEND_DIST)),
         name="static",
     )
 

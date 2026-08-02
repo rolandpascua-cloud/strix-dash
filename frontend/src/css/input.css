@@ -6,6 +6,14 @@
   :root {
     color-scheme: dark;
   }
+  /* The [hidden] attribute must beat layout utilities.
+     The UA stylesheet's [hidden] { display: none } loses on specificity to
+     Tailwind's .grid { display: grid }, so a hidden section carrying a layout
+     class stays on screen. Every page section has one, which made inactive
+     pages bleed into the active one. */
+  [hidden] {
+    display: none !important;
+  }
   body {
     @apply bg-ink-950 text-ink-100 antialiased;
     font-feature-settings: "tnum" 1;

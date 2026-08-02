@@ -18,9 +18,7 @@
 
       <nav class="flex gap-1" role="tablist" aria-label="Sections">
         <button class="tab tab-active" role="tab" data-page="overview">Overview</button>
-        <button class="tab" role="tab" data-page="compute">Compute</button>
         <button class="tab" role="tab" data-page="requirements">Requirements</button>
-        <button class="tab" role="tab" data-page="packages">Packages</button>
         <button class="tab" role="tab" data-page="snapshots">Snapshots</button>
         <button class="tab" role="tab" data-page="controls">Controls</button>
       </nav>
@@ -77,37 +75,11 @@
       </div>
     </section>
 
-    <section data-page="compute" hidden
-             class="grid gap-4 items-start"
-             style="grid-template-columns:repeat(auto-fit,minmax(460px,1fr))">
-      <div class="card" style="min-height:18rem">
-        <div class="card-head"><span class="card-title">NPU &mdash; xrt-smi</span></div>
-        <div class="card-body" id="xrt-panel"></div>
-      </div>
-      <div class="card" style="min-height:18rem">
-        <div class="card-head"><span class="card-title">ROCm agents</span></div>
-        <div class="card-body" id="agents-panel"></div>
-      </div>
-      <div class="card" style="min-height:18rem">
-        <div class="card-head"><span class="card-title">FastFlowLM models</span>
-          <span id="models-badge" class="badge badge-idle">&#8943;</span></div>
-        <div class="card-body" id="models-panel"></div>
-      </div>
-    </section>
-
     <section data-page="requirements" hidden class="max-w-none">
       <div class="card"><div class="card-head">
         <span class="card-title">Requirements</span></div>
         <div class="card-body" id="requirements-panel">
           <p class="text-ink-400 text-sm">Not yet implemented (build phase 4b).</p>
-        </div></div>
-    </section>
-
-    <section data-page="packages" hidden>
-      <div class="card"><div class="card-head">
-        <span class="card-title">Curated packages</span></div>
-        <div class="card-body" id="packages-panel">
-          <p class="text-ink-400 text-sm">Not yet implemented (build phase 4).</p>
         </div></div>
     </section>
 

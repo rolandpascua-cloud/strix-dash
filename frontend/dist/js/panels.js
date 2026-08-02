@@ -186,44 +186,6 @@ export function capabilities(data) {
   }
 }
 
-export function xrt(data) {
-  $("xrt-panel").innerHTML = `
-    ${kv("XRT version", text(data.xrt_version), { mono: true })}
-    ${kv("NPU firmware", text(data.npu_firmware_version), { mono: true })}
-    ${kv("Device", text(data.device_name))}
-    ${kv("BDF", text(data.device_bdf), { mono: true })}
-    ${kv("Power mode", text(data.power_mode))}
-    ${kv("Total columns", text(data.total_columns))}
-    ${kv("Estimated power", data.estimated_power === null
-        ? "not reported by this NPU" : text(data.estimated_power))}
-    ${kv("Processor", text(data.processor))}`;
-}
-
-export function agents(data) {
-  $("agents-panel").innerHTML = (data.agents || []).map((a) => `
-    <div class="mb-3 pb-2 border-b border-ink-800/60 last:border-0">
-      <div class="flex items-baseline justify-between">
-        <span class="font-mono text-sm text-ink-100">${esc(a.name)}</span>
-        ${badge("idle", a.device_type || "?")}
-      </div>
-      <div class="text-xs text-ink-400 mb-1">${esc(a.marketing_name || "")}</div>
-      ${kv("Compute units", text(a.compute_units))}
-      ${kv("Max clock", a.max_clock_mhz ? num(a.max_clock_mhz, " MHz") : "—")}
-      ${kv("ISAs", a.isa.length ? a.isa.length : "none reported")}
-    </div>`).join("");
-}
-
-export function models(data) {
-  setBadge("models-badge", "idle", `${data.installed}/${data.total}`);
-  const list = (data.models || []).map((m) => `
-    <div class="flex items-center justify-between gap-2 py-0.5">
-      <span class="font-mono text-xs text-ink-300 truncate">${esc(m.name)}</span>
-      ${m.installed ? badge("ok", "installed") : `<span class="text-[0.68rem] text-ink-600">—</span>`}
-    </div>`).join("");
-  $("models-panel").innerHTML =
-    `<p class="text-xs text-ink-400 mb-2">${data.installed} of ${data.total} models installed</p>${list}`;
-}
-
 export function stamp() {
   const el = $("foot-updated");
   if (el) el.textContent = `updated ${clock()}`;
