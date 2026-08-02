@@ -38,13 +38,16 @@ probe order and change across reboots — always resolve by reading
 `/sys/class/hwmon/*/name`. `install.sh` does this when generating the tmpfiles
 config, and the backend repeats it at every startup.
 
-## ppt_* power limits: unit unknown
+## ppt_* power limits: read-only
 
-All five nodes (`ppt_pl1_spl`, `ppt_pl2_sppt`, `ppt_fppt`, `ppt_apu_sppt`,
-`ppt_platform_sppt`) read `5`. That is not plausibly watts for a 395-class part,
-and the driver exposes no range. They are therefore **read-only**: displayed by
-node name with their raw value, absent from the sysfs write allowlist, and
-absent from the tmpfiles grant.
+The five nodes (`ppt_pl1_spl`, `ppt_pl2_sppt`, `ppt_fppt`, `ppt_apu_sppt`,
+`ppt_platform_sppt`) read `5` on a fresh boot and settle to plausible wattages
+once something programs them -- 52/71/70/70/70 was observed after z13ctl's setup
+ran. So they probably are watts, but "probably" is not a basis for writing to a
+power limit: the accepted range and the effect of each node are undocumented.
+
+They are therefore **read-only**: displayed by node name with their raw value,
+absent from the sysfs write allowlist, and absent from the tmpfiles grant.
 
 There is no write path for them at all -- not a disabled one. Adding it would
 mean confirming the semantics against the `asus-wmi` driver source, adding the

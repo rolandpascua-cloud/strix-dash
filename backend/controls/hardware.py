@@ -54,7 +54,10 @@ def _fan_curve_state() -> dict[str, Any]:
             {
                 "index": index,
                 "enable": sysfs.read_int(enable_node),
-                "writable": sysfs.describe(enable_node)["writable"],
+                # Writable directly, or via the helper when z13ctl owns it.
+                "writable": bool(
+                    sysfs.describe(enable_node)["writable"] or os.path.exists(config.PRIV_HELPER)
+                ),
                 "points": points,
             }
         )
@@ -178,8 +181,9 @@ async def read_all() -> dict[str, Any]:
             "writable": False,
             "values": {name: node["value"] for name, node in ppt.items()},
             "reason": (
-                "Units unconfirmed -- every node reads the same value, which is "
-                "not plausibly watts. Read-only until verified."
+                "Read-only: these look like watts, but the write semantics and "
+                "safe ranges are unverified, and a wrong value here is the one "
+                "change that could damage hardware."
             ),
             "source": "sysfs",
         },
@@ -361,6 +365,12 @@ def _validate_curve(points: list[dict[str, int]]) -> list[dict[str, int]]:
 
 
 async def set_fan_curve(fan: int, points: list[dict[str, int]]) -> dict[str, Any]:
+    """Write an 8-point curve, preferring direct sysfs.
+
+    z13ctl's udev rules chgrp this hwmon's pwm* nodes to "users", exactly as
+    they do the battery node, so the direct write stops working once z13ctl is
+    installed. Fall back to the privileged helper rather than contest ownership.
+    """
     hwmon = sysfs.find_hwmon(config.HWMON_FAN_CURVE_DRIVER)
     if hwmon is None:
         raise errors.not_supported("Fan curve", "asus_custom_fan_curve hwmon not present")
@@ -368,24 +378,43 @@ async def set_fan_curve(fan: int, points: list[dict[str, int]]) -> dict[str, Any
         raise errors.invalid_value("fan", f"must be one of {config.FAN_CURVE_FANS}")
 
     cleaned = _validate_curve(points)
-    for point in cleaned:
-        sysfs.write_int(hwmon / f"pwm{fan}_auto_point{point['point']}_temp", point["temp"])
-        sysfs.write_int(hwmon / f"pwm{fan}_auto_point{point['point']}_pwm", point["pwm"])
 
-    after = []
-    for point in range(1, config.FAN_CURVE_POINTS + 1):
-        after.append(
-            {
-                "point": point,
-                "temp": sysfs.read_int(hwmon / f"pwm{fan}_auto_point{point}_temp"),
-                "pwm": sysfs.read_int(hwmon / f"pwm{fan}_auto_point{point}_pwm"),
-            }
+    if os.access(hwmon / f"pwm{fan}_auto_point1_temp", os.W_OK):
+        for point in cleaned:
+            sysfs.write_int(hwmon / f"pwm{fan}_auto_point{point['point']}_temp", point["temp"])
+            sysfs.write_int(hwmon / f"pwm{fan}_auto_point{point['point']}_pwm", point["pwm"])
+        backend = "sysfs"
+    else:
+        if not os.path.exists(config.PRIV_HELPER):
+            raise errors.permission_denied(str(hwmon))
+        spec = ",".join(f"{p['temp']}:{p['pwm']}" for p in cleaned)
+        result = await run(
+            [config.TOOLS["sudo"], "-n", config.PRIV_HELPER, "fancurve", str(fan), spec],
+            tool="sudo",
+            timeout=20,
         )
+        if not result.ok:
+            raise result.error or errors.permission_denied(str(hwmon))
+        backend = "priv-helper"
 
+    after = [
+        {
+            "point": point,
+            "temp": sysfs.read_int(hwmon / f"pwm{fan}_auto_point{point}_temp"),
+            "pwm": sysfs.read_int(hwmon / f"pwm{fan}_auto_point{point}_pwm"),
+        }
+        for point in range(1, config.FAN_CURVE_POINTS + 1)
+    ]
     verified = all(
         a["temp"] == c["temp"] and a["pwm"] == c["pwm"] for a, c in zip(after, cleaned, strict=True)
     )
-    return {"requested": cleaned, "applied": after, "verified": verified, "raw": after}
+    return {
+        "requested": cleaned,
+        "applied": after,
+        "verified": verified,
+        "raw": after,
+        "backend": backend,
+    }
 
 
 def confirm_for(control_id: str, proposed: Any, current: Any) -> dict[str, Any]:

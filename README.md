@@ -4,6 +4,15 @@ A system control panel for AMD Strix Halo laptops running Debian 13 — live
 NPU/GPU telemetry, a btrfs snapshot package auditor, prerequisite management,
 and native hardware controls.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Overview](docs/screenshots/overview.png) | ![Requirements](docs/screenshots/requirements.png) |
+| **Overview** — NPU stack with IOMMU state, unified memory, GPU, host, thermals, capabilities | **Requirements** — prerequisite detection, distinguishing *local install* from *satisfied* |
+| ![Snapshots](docs/screenshots/snapshots.png) | ![Controls](docs/screenshots/controls.png) |
+| **Snapshots** — btrfs snapshot auditor with on-demand package diffing | **Controls** — profile, NPU power mode, TuneD, battery, backlight, fan curves |
+
 ## Scope and requirements
 
 > **strix-dash is a companion to AMD's *Ryzen AI Developer Platform 1 (rex)*
@@ -88,8 +97,8 @@ strix-dash covers those gaps:
   hwmon and psutil, normalised into one API.
 - **Snapshot auditor** — diffs installed packages across btrfs snapshots
   (`factory`, post-driver-install, current) with no privileges at all.
-- **Requirements** — detects prerequisites, distinguishes *local-only* from
-  *up-to-date*, and can install a verified release.
+- **Requirements** — detects prerequisites, distinguishes a *local install*
+  from one apt is tracking, and can install a verified release.
 - **Controls** — performance profile, fan curves, battery limit, keyboard
   backlight, NPU power mode, TuneD profile.
 
@@ -103,19 +112,6 @@ GTT allocation.
 
 So the API always presents **GTT as primary** and the carveout as clearly
 labelled secondary, and no endpoint returns a bare `vram_pct`.
-
-## Install
-
-Requires `python3-fastapi`, `python3-uvicorn`, `python3-psutil`,
-`python3-pydantic` (all Debian packages — no venv, no pip at runtime).
-
-```bash
-./scripts/bootstrap-npu.sh --check-only   # verify prerequisites first
-sudo ./scripts/install.sh                 # service user, unit, sudoers, tmpfiles
-```
-
-Then open <http://127.0.0.1:10001>. Remove with `sudo ./scripts/uninstall.sh`
-(add `--purge` to drop the user, config and logs).
 
 ## Development
 
@@ -164,7 +160,7 @@ Three design rules do most of the work:
 
 | Feature | Status |
 |---|---|
-| TDP (`ppt_*`) | **Read-only telemetry, no write path.** All five nodes read `5`, which is not plausibly watts. Shipping a "TDP (W)" slider on that guess could damage hardware. |
+| TDP (`ppt_*`) | **Read-only telemetry, no write path.** The values look like watts (52/71/70/70/70 here), but the write semantics and safe ranges are unverified, and a wrong value is the one change that could damage hardware. |
 | RGB / Aura | Unavailable. No multicolour LED node exists — only a 0–3 brightness channel. Requires `z13ctl`. |
 | NPU power mode | The `amdxdna` driver may reject `DRM_IOCTL_AMDXDNA_SET_STATE` with `EACCES`. Verify with `sudo xrt-smi configure --pmode performance`. |
 | `SystemCallFilter` | Deliberately unset in the unit — see the comment there; a seccomp filter forces `NoNewPrivileges` and breaks setuid `sudo`. |
