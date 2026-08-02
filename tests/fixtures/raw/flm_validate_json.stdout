@@ -1,0 +1,24 @@
+{
+    "all_fw_ok": true,
+    "amd_device_found": true,
+    "devices": [
+        {
+            "cols": 8,
+            "device": "/dev/accel/accel0",
+            "fw_build": 65,
+            "fw_major": 1,
+            "fw_minor": 1,
+            "fw_ok": true,
+            "fw_patch": 2
+        }
+    ],
+    "drm_version": "0.6",
+    "enough_cols": true,
+    "kernel": "6.18.35+rex+2-amd64",
+    "kernel_ok": true,
+    "memlock_limit": "infinity",
+    "memlock_ok": true,
+    "object": "npu_stack_validation",
+    "platform": "linux",
+    "ready": true
+}

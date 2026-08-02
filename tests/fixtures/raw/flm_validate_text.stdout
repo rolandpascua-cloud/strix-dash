@@ -1,0 +1,5 @@
+[Linux]  Kernel: 6.18.35+rex+2-amd64
+[32m[Linux]  NPU: /dev/accel/accel0 with 8 columns[0m
+[32m[Linux]  NPU FW Version: 1.1.2.65[0m
+[32m[Linux]  amdxdna version: 0.6[0m
+[32m[Linux]  Memlock Limit: infinity[0m

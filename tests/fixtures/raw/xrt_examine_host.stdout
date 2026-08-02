@@ -1,0 +1,23 @@
+System Configuration
+  OS Name              : Linux
+  Release              : 6.18.35+rex+2-amd64
+  Machine              : x86_64
+  CPU Cores            : 32
+  Memory               : 127948 MB
+  Distribution         : AMD Ryzen AI Developer Platform 1 (rex)
+  GLIBC                : 2.41
+  Model                : ROG Flow Z13 GZ302EA_GZ302EA
+  BIOS Vendor          : American Megatrends International, LLC.
+  BIOS Version         : GZ302EA.000
+  Processor            : AMD RYZEN AI MAX+ 395 w/ Radeon 8060S
+
+XRT
+  Version              : 2.21.75
+  amdxdna Version      : 6.18.35+rex+2-amd64
+  virtio-pci Version   : 6.18.35+rex+2-amd64
+  NPU Firmware Version : 1.1.2.65
+
+Device(s) Present
+|BDF             |Name          |
+|----------------|--------------|
+|[0000:00:00.1]  |RyzenAI-npu5  |
