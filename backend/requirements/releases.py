@@ -33,12 +33,18 @@ HELPER = "/usr/lib/strix-dash/backend/strix-dash-req-helper.sh"
 _TIMEOUT = 15
 
 
-def _select_asset(req: Requirement, tag_name: str, assets: list[dict]) -> dict | None:
-    """Pick the asset matching this distribution."""
+def _select_asset(
+    req: Requirement, tag_name: str, assets: list[dict], distro: str | None = None
+) -> dict | None:
+    """Pick the asset matching this distribution.
+
+    ``distro`` may be supplied so callers (and tests) are not tied to the
+    machine they happen to be running on.
+    """
     if not req.asset_template:
         return None
     version = tag_name.lstrip("v")
-    wanted = req.asset_template.format(version=version, distro_tag=distro_tag())
+    wanted = req.asset_template.format(version=version, distro_tag=distro or distro_tag())
     for asset in assets:
         if asset.get("name") == wanted:
             return asset

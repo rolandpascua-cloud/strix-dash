@@ -57,26 +57,43 @@ RELEASE = {
 # ---------------------------------------------------------------------------
 
 
-def test_distro_tag_is_debian13_on_this_platform() -> None:
-    """This OS reports ID=amd-ryzen-ai-developer-platform, ID_LIKE=debian.
+@pytest.mark.parametrize(
+    ("fields", "debian_version", "expected"),
+    [
+        # This platform: a Debian derivative whose own VERSION_ID is "1", which
+        # matches no release asset. It must map to its Debian base instead.
+        (
+            {"ID": "amd-ryzen-ai-developer-platform", "ID_LIKE": "debian", "VERSION_ID": "1"},
+            "13.4",
+            "debian13",
+        ),
+        ({"ID": "debian", "VERSION_ID": "13"}, None, "debian13"),
+        ({"ID": "ubuntu", "VERSION_ID": "24.04"}, None, "ubuntu24.04"),
+        ({"ID": "ubuntu", "VERSION_ID": "26.04"}, None, "ubuntu26.04"),
+        ({}, None, "unknown"),
+    ],
+)
+def test_distro_tag_derives_from_os_release(
+    fields: dict[str, str], debian_version: str | None, expected: str
+) -> None:
+    """Synthetic inputs only -- this must not depend on the host running it."""
+    assert detect.distro_tag(fields, debian_version) == expected
 
-    A naive reading of ID would produce a tag matching no asset at all.
-    """
-    assert detect.distro_tag() == "debian13"
 
-
-def test_selects_the_debian_asset_not_an_ubuntu_one() -> None:
-    asset = _select_asset(BY_ID["fastflowlm"], "v0.9.46", RELEASE["assets"])
+def test_selects_the_asset_matching_the_distro() -> None:
+    asset = _select_asset(BY_ID["fastflowlm"], "v0.9.46", RELEASE["assets"], distro="debian13")
     assert asset is not None
     assert asset["name"] == "fastflowlm_0.9.46_debian13_amd64.deb"
     assert asset["size"] == 40166224
     assert "ubuntu" not in asset["name"]
 
 
-def test_missing_asset_for_a_distro_returns_none_rather_than_guessing() -> None:
+def test_never_falls_back_to_another_distros_asset() -> None:
+    """Wrong-distro assets are present in the same release; picking one would
+    silently install an incompatible binary."""
     req = BY_ID["fastflowlm"]
     others = [a for a in RELEASE["assets"] if "debian" not in a["name"]]
-    assert _select_asset(req, "v0.9.46", others) is None
+    assert _select_asset(req, "v0.9.46", others, distro="debian13") is None
 
 
 def test_requirements_without_a_feed_declare_no_asset_template() -> None:

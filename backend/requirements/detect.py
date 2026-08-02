@@ -26,12 +26,7 @@ from backend.requirements.registry import REQUIREMENTS, Requirement
 _ORIGIN_RE = re.compile(r"^\s+\d+\s+(\S+)", re.MULTILINE)
 
 
-def distro_tag() -> str:
-    """Release-asset tag for this distribution.
-
-    Derived, never hardcoded: FastFlowLM ships debian13, ubuntu24.04,
-    ubuntu25.10 and ubuntu26.04 builds in the same release.
-    """
+def _os_release_fields() -> dict[str, str]:
     fields: dict[str, str] = {}
     try:
         for line in Path("/etc/os-release").read_text().splitlines():
@@ -39,7 +34,22 @@ def distro_tag() -> str:
                 key, _, value = line.partition("=")
                 fields[key.strip()] = value.strip().strip('"')
     except OSError:
-        return "unknown"
+        pass
+    return fields
+
+
+def distro_tag(fields: dict[str, str] | None = None, debian_version: str | None = None) -> str:
+    """Release-asset tag for this distribution.
+
+    Derived, never hardcoded: FastFlowLM ships debian13, ubuntu24.04,
+    ubuntu25.10 and ubuntu26.04 builds in the same release, and picking the
+    wrong one silently installs an incompatible binary.
+
+    ``fields`` and ``debian_version`` exist so this can be tested against
+    synthetic inputs rather than whatever machine the tests happen to run on.
+    """
+    if fields is None:
+        fields = _os_release_fields()
 
     ident = fields.get("ID", "")
     like = fields.get("ID_LIKE", "")
@@ -47,16 +57,21 @@ def distro_tag() -> str:
 
     if ident == "ubuntu":
         return f"ubuntu{version}"
+
     if ident == "debian" or "debian" in like:
-        # Derivatives (this OS reports ID=amd-ryzen-ai-developer-platform with
-        # ID_LIKE=debian) must map to their Debian base, not their own VERSION_ID.
+        # Derivatives (this platform reports ID=amd-ryzen-ai-developer-platform
+        # with ID_LIKE=debian) must map to their Debian base, not their own
+        # VERSION_ID -- which is "1" here and matches no asset.
         major = version.split(".")[0] if ident == "debian" else ""
         if not major:
-            try:
-                major = Path("/etc/debian_version").read_text().strip().split(".")[0]
-            except OSError:
-                major = ""
+            if debian_version is None:
+                try:
+                    debian_version = Path("/etc/debian_version").read_text()
+                except OSError:
+                    debian_version = ""
+            major = debian_version.strip().split(".")[0]
         return f"debian{major}" if major else "debian"
+
     return ident or "unknown"
 
 
