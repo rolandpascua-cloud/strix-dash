@@ -139,11 +139,22 @@ LIVE_DPKG_ADMINDIR = Path("/var/lib/dpkg")
 # ---------------------------------------------------------------------------
 
 _here = Path(__file__).resolve().parent
-FRONTEND_DIST = (
-    Path("/usr/share/strix-dash/frontend")
-    if Path("/usr/share/strix-dash/frontend").is_dir()
-    else _here.parent / "frontend" / "dist"
-)
+_repo_dist = _here.parent / "frontend" / "dist"
+_installed_dist = Path("/usr/share/strix-dash/frontend")
+
+# STRIX_DASH_FRONTEND wins, then the installed copy, then the repo's dist.
+#
+# The override matters for development: with the service installed, a dev server
+# started from a checkout would otherwise serve the INSTALLED frontend and
+# silently ignore local edits. scripts/dev-run.sh sets it for exactly that
+# reason.
+if _env_frontend := os.environ.get("STRIX_DASH_FRONTEND"):
+    FRONTEND_DIST = Path(_env_frontend)
+elif _installed_dist.is_dir():
+    FRONTEND_DIST = _installed_dist
+else:
+    FRONTEND_DIST = _repo_dist
+
 LOG_DIR = Path("/var/log/strix-dash")
 STAGING_DIR = Path("/var/lib/strix-dash/staging")
 

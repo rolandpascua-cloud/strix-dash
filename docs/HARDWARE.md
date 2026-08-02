@@ -1,6 +1,22 @@
 # Hardware notes
 
-Verified on an ASUS ROG Flow Z13 (GZ302EA), Ryzen AI MAX+ 395, Debian 13.
+Verified on an ASUS ROG Flow Z13 (GZ302EA), Ryzen AI MAX+ 395, running AMD's
+Ryzen AI Developer Platform 1 (rex).
+
+## Scope
+
+strix-dash is a **companion to the rex OS**, not a replacement for its own
+dashboard. Support splits into two tiers:
+
+| Tier | Needs | Covers |
+|---|---|---|
+| Platform | Strix Halo SoC (gfx1151 + aie2p) on Debian 13 | Telemetry, snapshot auditor, requirements |
+| Chassis | **ASUS ROG Flow Z13 (GZ302EA)** + `asus-nb-wmi` | The Controls tab, only |
+
+Everything in the Controls tab reaches the `asus-nb-wmi` platform driver or the
+`asus_custom_fan_curve` hwmon device. On other hardware those nodes are absent,
+the capability probe reports each control unavailable with a reason, and no
+endpoint errors -- the rest of the dashboard is unaffected.
 
 ## Control surface
 

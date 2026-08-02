@@ -4,10 +4,21 @@ A system control panel for AMD Strix Halo laptops running Debian 13 — live
 NPU/GPU telemetry, a btrfs snapshot package auditor, prerequisite management,
 and native hardware controls.
 
-Built for and tested on an **ASUS ROG Flow Z13 (GZ302EA)** with a **Ryzen AI
-MAX+ 395** (gfx1151 GPU + `aie2p` NPU) running AMD's *Ryzen AI Developer
-Platform* OS. It runs alongside the vendor's own dashboard rather than
-replacing it.
+## Scope and requirements
+
+> **strix-dash is a companion to AMD's *Ryzen AI Developer Platform 1 (rex)*
+> OS, not a replacement for it.** It runs alongside the vendor's own dashboard
+> (`halo-lp`, on `:10001` vs its `:10000`) and fills the gaps that one leaves —
+> it does not duplicate or interfere with it.
+
+| | Requirement |
+|---|---|
+| **OS** | AMD *Ryzen AI Developer Platform 1 (rex)* — a Debian 13 derivative. Other Debian 13 systems will mostly work; the snapshot auditor additionally needs the platform's btrfs layout under `/var/snapshots/system/`. |
+| **SoC** | Ryzen AI MAX+ 395 (Strix Halo) — gfx1151 GPU + `aie2p` NPU. Telemetry is written against these specifically. |
+| **Chassis — Controls tab only** | **ASUS ROG Flow Z13 (GZ302EA).** The Controls tab drives the `asus-nb-wmi` platform driver and the `asus_custom_fan_curve` hwmon device. On any other machine those nodes are absent and every control renders as unavailable with a reason — the rest of the dashboard is unaffected. |
+
+Telemetry, the snapshot auditor and requirements detection work on any Strix
+Halo machine. Only the **Controls** tab is chassis-specific.
 
 > **This application writes to hardware.** It can change performance profiles,
 > fan curves, battery charge limits and NPU power modes. Read

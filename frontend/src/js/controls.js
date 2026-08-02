@@ -132,7 +132,25 @@ function render() {
   const fan = c.fan_curve || {};
   const fanWritable = (fan.fans || []).some((f) => f.writable);
 
+  // These controls drive the asus-nb-wmi platform driver and the
+  // asus_custom_fan_curve hwmon device. If neither is present we are not on
+  // supported hardware, and saying so is more useful than a page of disabled
+  // widgets with no explanation.
+  const chassisPresent = Boolean(fan.available || c.platform_profile?.value);
+
   panel.innerHTML = `
+    <div class="mb-4 rounded-md border px-4 py-2.5 text-xs
+                ${chassisPresent
+                  ? "border-ink-700 bg-ink-900 text-ink-400"
+                  : "border-warn-500/40 bg-warn-500/10 text-warn-300"}">
+      ${chassisPresent ? "&#8505;" : "&#9888;"}
+      Hardware controls require an <strong>ASUS ROG Flow Z13 (GZ302EA)</strong>
+      and the <code>asus-nb-wmi</code> platform driver.
+      ${chassisPresent
+        ? "Detected — controls below act on real hardware."
+        : "Not detected: these controls are unavailable on this machine. Telemetry, snapshots and requirements are unaffected."}
+    </div>
+
     <div class="grid gap-4 items-start"
          style="grid-template-columns:repeat(auto-fit,minmax(400px,1fr))">
       <div>
