@@ -116,6 +116,9 @@ async def _fetch(report: str) -> dict[str, Any]:
 
 async def examine(report: str = "all", *, force: bool = False) -> dict[str, Any]:
     entry = await cache.get(
-        f"xrt:{report}", lambda: _fetch(report), ttl=config.CACHE_TTL["xrt"], force=force
+        f"xrt:{report}",
+        lambda: _fetch(report),
+        ttl=config.CACHE_TTL["xrt"],
+        force=force,
     )
     return entry.value

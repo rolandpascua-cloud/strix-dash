@@ -39,11 +39,31 @@ def _shape_validate(raw: dict[str, Any]) -> dict[str, Any]:
 
     checks = [
         {"id": "kernel", "ok": raw.get("kernel_ok"), "value": raw.get("kernel")},
-        {"id": "device", "ok": raw.get("amd_device_found"), "value": devices[0]["device"] if devices else None},
-        {"id": "columns", "ok": raw.get("enough_cols"), "value": devices[0]["columns"] if devices else None},
-        {"id": "firmware", "ok": raw.get("all_fw_ok"), "value": devices[0]["firmware_version"] if devices else None},
-        {"id": "memlock", "ok": raw.get("memlock_ok"), "value": raw.get("memlock_limit")},
-        {"id": "driver", "ok": raw.get("drm_version") is not None, "value": raw.get("drm_version")},
+        {
+            "id": "device",
+            "ok": raw.get("amd_device_found"),
+            "value": devices[0]["device"] if devices else None,
+        },
+        {
+            "id": "columns",
+            "ok": raw.get("enough_cols"),
+            "value": devices[0]["columns"] if devices else None,
+        },
+        {
+            "id": "firmware",
+            "ok": raw.get("all_fw_ok"),
+            "value": devices[0]["firmware_version"] if devices else None,
+        },
+        {
+            "id": "memlock",
+            "ok": raw.get("memlock_ok"),
+            "value": raw.get("memlock_limit"),
+        },
+        {
+            "id": "driver",
+            "ok": raw.get("drm_version") is not None,
+            "value": raw.get("drm_version"),
+        },
     ]
 
     return {
@@ -71,7 +91,10 @@ async def _fetch_validate() -> dict[str, Any]:
 
 async def validate(*, force: bool = False) -> dict[str, Any]:
     entry = await cache.get(
-        "flm_validate", _fetch_validate, ttl=config.CACHE_TTL["flm_validate"], force=force
+        "flm_validate",
+        _fetch_validate,
+        ttl=config.CACHE_TTL["flm_validate"],
+        force=force,
     )
     return entry.value
 

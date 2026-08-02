@@ -72,6 +72,10 @@ def _shape(req: Requirement, payload: dict[str, Any]) -> dict[str, Any]:
 
 def _fetch_direct(repo: str) -> dict[str, Any]:
     url = f"https://api.github.com/repos/{repo}/releases/latest"
+    # Defence in depth: the host is hardcoded above, but assert it anyway so
+    # no future edit can introduce a file:// or custom-scheme fetch.
+    if not url.startswith("https://api.github.com/"):  # pragma: no cover
+        raise errors.invalid_value("release url", "must be the GitHub API over https")
     request = urllib.request.Request(
         url,
         headers={
@@ -79,7 +83,7 @@ def _fetch_direct(repo: str) -> dict[str, Any]:
             "User-Agent": "strix-dash",
         },
     )
-    with urllib.request.urlopen(request, timeout=_TIMEOUT) as response:
+    with urllib.request.urlopen(request, timeout=_TIMEOUT) as response:  # noqa: S310
         return json.loads(response.read().decode())
 
 
@@ -105,8 +109,7 @@ async def _fetch(requirement_id: str) -> dict[str, Any]:
         raise errors.ToolError(
             code=errors.ErrorCode.NOT_SUPPORTED,
             message=f"{req.name} has no automatic release feed",
-            hint=req.remediation
-            or "This requirement is tracked but must be updated manually.",
+            hint=req.remediation or "This requirement is tracked but must be updated manually.",
         )
 
     if os.path.exists(HELPER):

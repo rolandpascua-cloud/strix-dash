@@ -1,0 +1,19 @@
+# Pinned so CI and local runs agree, and so a ruff release cannot fail the build
+# on rules the project never opted into.
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "S", "RUF"]
+ignore = [
+    "S404",  # importing subprocess is the point of core/runner.py
+    "S603",  # every exec is an absolute path from config.TOOLS, never a shell
+    "E501",  # long lines are flagged by the formatter, not the linter
+]
+
+[lint.per-file-ignores]
+# Tests deliberately exercise subprocess and assert on hardcoded fixture values.
+"tests/*" = ["S101", "S603", "S607"]
+
+[format]
+quote-style = "double"

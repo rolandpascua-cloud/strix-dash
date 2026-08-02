@@ -35,7 +35,11 @@ PAGE_SIZE = 4096
 
 def parse_amd_ttm(text: str) -> dict[str, Any]:
     """Parse amd-ttm output (emoji + colour already stripped by the runner)."""
-    out: dict[str, Any] = {"pages_limit": None, "limit_bytes": None, "system_total_gb": None}
+    out: dict[str, Any] = {
+        "pages_limit": None,
+        "limit_bytes": None,
+        "system_total_gb": None,
+    }
     if match := _TTM_RE.search(text):
         pages = int(match.group(1))
         out["pages_limit"] = pages

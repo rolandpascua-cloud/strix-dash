@@ -215,7 +215,15 @@ def _probe_features(sysfs_nodes: dict[str, Any]) -> list[Capability]:
 async def _build() -> dict[str, Any]:
     tools = {
         name: _probe_binary(name).to_dict()
-        for name in ("flm", "xrt-smi", "rocm-smi", "rocminfo", "amd-ttm", "tuned-adm", "z13ctl")
+        for name in (
+            "flm",
+            "xrt-smi",
+            "rocm-smi",
+            "rocminfo",
+            "amd-ttm",
+            "tuned-adm",
+            "z13ctl",
+        )
     }
     nodes = _probe_sysfs()
     features = {cap.id.split(":", 1)[1]: cap.to_dict() for cap in _probe_features(nodes)}
@@ -229,9 +237,7 @@ async def _build() -> dict[str, Any]:
         "summary": {
             "tools_available": sum(1 for t in tools.values() if t["available"]),
             "tools_total": len(tools),
-            "degraded": sorted(
-                k for k, v in features.items() if not v["available"]
-            ),
+            "degraded": sorted(k for k, v in features.items() if not v["available"]),
         },
     }
 

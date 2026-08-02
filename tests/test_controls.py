@@ -38,7 +38,7 @@ def test_backlight_clamps_to_hardware_max() -> None:
 
 
 def _curve(temps: list[int], pwms: list[int]) -> list[dict[str, int]]:
-    return [{"temp": t, "pwm": p} for t, p in zip(temps, pwms)]
+    return [{"temp": t, "pwm": p} for t, p in zip(temps, pwms, strict=True)]
 
 
 VALID_TEMPS = [48, 53, 57, 60, 63, 65, 70, 76]
@@ -74,8 +74,8 @@ def test_curve_rejects_decreasing_pwm() -> None:
 
 def test_curve_clamps_out_of_range_values() -> None:
     cleaned = _validate_curve(_curve([0] * 8, [999] * 8))
-    assert all(p["temp"] == 20 for p in cleaned)   # FAN_TEMP_RANGE floor
-    assert all(p["pwm"] == 255 for p in cleaned)   # PWM_RANGE ceiling
+    assert all(p["temp"] == 20 for p in cleaned)  # FAN_TEMP_RANGE floor
+    assert all(p["pwm"] == 255 for p in cleaned)  # PWM_RANGE ceiling
 
 
 # ---------------------------------------------------------------------------

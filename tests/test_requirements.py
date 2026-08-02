@@ -7,7 +7,6 @@ its input validation and allowlist can be tested without privileges or network.
 
 from __future__ import annotations
 
-import json
 import re
 import subprocess
 import tempfile
@@ -25,15 +24,30 @@ HELPER_SRC = Path(__file__).parent.parent / "packaging" / "strix-dash-req-helper
 RELEASE = {
     "tag_name": "v0.9.46",
     "assets": [
-        {"name": "fastflowlm_0.9.46_debian13_amd64.deb", "size": 40166224,
-         "browser_download_url": "https://github.com/FastFlowLM/FastFlowLM/releases/download/v0.9.46/fastflowlm_0.9.46_debian13_amd64.deb",
-         "digest": "sha256:068a9f30f079d772074696ec4a8a40cc4818c21825d3b9a6549bb51cc2bce948"},
-        {"name": "fastflowlm_0.9.46_ubuntu24.04_amd64.deb", "size": 28093344,
-         "browser_download_url": "https://example.invalid/u24", "digest": "sha256:aaa"},
-        {"name": "fastflowlm_0.9.46_ubuntu26.04_amd64.deb", "size": 29298124,
-         "browser_download_url": "https://example.invalid/u26", "digest": "sha256:bbb"},
-        {"name": "fastflowlm_0.9.46_windows_amd64.zip", "size": 35528044,
-         "browser_download_url": "https://example.invalid/win", "digest": "sha256:ccc"},
+        {
+            "name": "fastflowlm_0.9.46_debian13_amd64.deb",
+            "size": 40166224,
+            "browser_download_url": "https://github.com/FastFlowLM/FastFlowLM/releases/download/v0.9.46/fastflowlm_0.9.46_debian13_amd64.deb",
+            "digest": "sha256:068a9f30f079d772074696ec4a8a40cc4818c21825d3b9a6549bb51cc2bce948",
+        },
+        {
+            "name": "fastflowlm_0.9.46_ubuntu24.04_amd64.deb",
+            "size": 28093344,
+            "browser_download_url": "https://example.invalid/u24",
+            "digest": "sha256:aaa",
+        },
+        {
+            "name": "fastflowlm_0.9.46_ubuntu26.04_amd64.deb",
+            "size": 29298124,
+            "browser_download_url": "https://example.invalid/u26",
+            "digest": "sha256:bbb",
+        },
+        {
+            "name": "fastflowlm_0.9.46_windows_amd64.zip",
+            "size": 35528044,
+            "browser_download_url": "https://example.invalid/win",
+            "digest": "sha256:ccc",
+        },
     ],
 }
 
@@ -115,7 +129,7 @@ def helper() -> Path:
 
 def _run(helper: Path, *args: str) -> tuple[int, str]:
     proc = subprocess.run(
-        [str(helper), *args], capture_output=True, text=True, timeout=30
+        [str(helper), *args], capture_output=True, text=True, timeout=30, check=False
     )
     return proc.returncode, proc.stdout + proc.stderr
 
@@ -146,7 +160,7 @@ def test_helper_rejects_ids_outside_its_allowlist(helper: Path) -> None:
 
 
 def test_helper_rejects_unknown_actions(helper: Path) -> None:
-    code, output = _run(helper, "destroy", "fastflowlm")
+    code, _ = _run(helper, "destroy", "fastflowlm")
     assert code != 0
 
 
@@ -169,9 +183,7 @@ def test_helper_fetches_only_github_and_the_resolved_asset() -> None:
     source = HELPER_SRC.read_text()
     urls = re.findall(r'https://[^"\s]+', source)
     for url in urls:
-        assert url.startswith(
-            ("https://api.github.com/repos/", "https://github.com/")
-        ), url
+        assert url.startswith(("https://api.github.com/repos/", "https://github.com/")), url
 
 
 def test_helper_requires_a_digest_before_installing() -> None:

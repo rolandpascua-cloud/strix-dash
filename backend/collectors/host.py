@@ -116,7 +116,10 @@ def snapshot() -> dict[str, Any]:
             "available": mem.available,
             "percent": mem.percent,
         },
-        "swap": {"total": psutil.swap_memory().total, "used": psutil.swap_memory().used},
+        "swap": {
+            "total": psutil.swap_memory().total,
+            "used": psutil.swap_memory().used,
+        },
         "disk_root": {
             "total": root_usage.total,
             "used": root_usage.used,

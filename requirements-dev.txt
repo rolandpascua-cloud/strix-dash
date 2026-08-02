@@ -1,0 +1,5 @@
+# Development and CI tooling. Runtime dependencies are Debian packages
+# (python3-fastapi, python3-uvicorn, python3-psutil, python3-pydantic) --
+# see README. Pinned so CI and local runs agree.
+pytest
+ruff==0.16.1

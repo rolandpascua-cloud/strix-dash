@@ -106,9 +106,7 @@ PPT_NODES = (
 )
 PPT_WRITABLE = False
 
-BATTERY_CHARGE_LIMIT = Path(
-    "/sys/class/power_supply/BAT0/charge_control_end_threshold"
-)
+BATTERY_CHARGE_LIMIT = Path("/sys/class/power_supply/BAT0/charge_control_end_threshold")
 BATTERY_LIMIT_RANGE = (20, 100)
 
 # Single-channel brightness only. There is no multicolour LED node on this

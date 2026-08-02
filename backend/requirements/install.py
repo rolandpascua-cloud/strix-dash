@@ -21,9 +21,9 @@ import os
 from typing import Any
 
 from backend import config
+from backend.controls import confirm
 from backend.core import errors
 from backend.core.runner import run
-from backend.controls import confirm
 from backend.requirements import detect, releases
 from backend.requirements.registry import BY_ID
 

@@ -35,9 +35,7 @@ async def list_requirements() -> Any:
 async def check_release(requirement_id: str, force: bool = Query(True)) -> Any:
     """Look up the newest upstream release for one requirement."""
     try:
-        return models.ok(
-            await releases.latest(requirement_id, force=force), source="github"
-        )
+        return models.ok(await releases.latest(requirement_id, force=force), source="github")
     except ToolError as exc:
         return models.respond(exc, source="github")
 
@@ -59,8 +57,6 @@ async def preview_install(requirement_id: str) -> Any:
 async def perform_install(requirement_id: str, body: InstallBody) -> Any:
     """Download, verify the digest, and install as root via the helper."""
     try:
-        return models.ok(
-            await install.perform(requirement_id, body.confirm_token), source="apt"
-        )
+        return models.ok(await install.perform(requirement_id, body.confirm_token), source="apt")
     except ToolError as exc:
         return models.respond(exc, source="apt")

@@ -152,9 +152,7 @@ def _admindir_for(snapshot_id: str) -> Path:
 
 
 async def _query_packages(admindir: Path) -> dict[str, str]:
-    result = await run_tool(
-        "dpkg-query", f"--admindir={admindir}", "-W", f"-f={_QUERY_FORMAT}"
-    )
+    result = await run_tool("dpkg-query", f"--admindir={admindir}", "-W", f"-f={_QUERY_FORMAT}")
     if not result.ok:
         raise result.error or errors.parse_error("dpkg-query", "query failed")
 
@@ -216,18 +214,14 @@ async def diff(base_id: str, target_id: str) -> dict[str, Any]:
 
     added = sorted(target_names - base_names)
     removed = sorted(base_names - target_names)
-    changed = sorted(
-        name for name in base_names & target_names if base[name] != target[name]
-    )
+    changed = sorted(name for name in base_names & target_names if base[name] != target[name])
 
     return {
         "base": base_id,
         "target": target_id,
         "added": [{"package": n, "version": target[n]} for n in added],
         "removed": [{"package": n, "version": base[n]} for n in removed],
-        "changed": [
-            {"package": n, "from": base[n], "to": target[n]} for n in changed
-        ],
+        "changed": [{"package": n, "from": base[n], "to": target[n]} for n in changed],
         "summary": {
             "added": len(added),
             "removed": len(removed),

@@ -19,8 +19,9 @@ import os
 import shlex
 import signal
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, Sequence
+from typing import Any, Literal
 
 from backend import config
 from backend.core import errors
@@ -139,12 +140,12 @@ async def run(
     payload = input_text.encode() if input_text is not None else None
     try:
         raw_out, raw_err = await asyncio.wait_for(proc.communicate(payload), timeout=limit)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _kill_group(proc)
         # Reap so the event loop doesn't warn about an orphaned transport.
         try:
             await asyncio.wait_for(proc.wait(), timeout=2.0)
-        except asyncio.TimeoutError:  # pragma: no cover - very defensive
+        except TimeoutError:  # pragma: no cover - very defensive
             pass
         return _fail(errors.timeout(name, limit))
 
@@ -170,9 +171,13 @@ async def run(
         # build version), so surface the first line that looks like a diagnosis
         # rather than blindly taking line 0.
         signal = next(
-            (ln for ln in lines if any(
-                marker in ln.lower() for marker in ("error", "denied", "failed", "not allowed")
-            )),
+            (
+                ln
+                for ln in lines
+                if any(
+                    marker in ln.lower() for marker in ("error", "denied", "failed", "not allowed")
+                )
+            ),
             lines[0] if lines else "",
         )
         result.error = errors.ToolError(

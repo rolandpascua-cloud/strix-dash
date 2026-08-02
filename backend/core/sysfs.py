@@ -10,8 +10,8 @@ Reads are unrestricted -- everything under /sys is world-readable and harmless.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from backend import config
 from backend.core import errors

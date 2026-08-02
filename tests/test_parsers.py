@@ -129,9 +129,7 @@ def test_flm_version_fixture() -> None:
 def test_tuned_exits_zero_while_daemon_is_down() -> None:
     """Exit code 0 here means nothing; the daemon was not running."""
     assert (FIXTURES / "tuned_adm_active.exit").read_text().strip() == "0"
-    assert "Cannot talk to TuneD daemon" in (
-        FIXTURES / "tuned_adm_active.stderr"
-    ).read_text()
+    assert "Cannot talk to TuneD daemon" in (FIXTURES / "tuned_adm_active.stderr").read_text()
     assert "Preset profile:" in fixture("tuned_adm_active")
 
 

@@ -62,7 +62,10 @@ def distro_tag() -> str:
 
 async def _dpkg_state(package: str) -> dict[str, Any]:
     result = await run_tool(
-        "dpkg-query", "-W", "-f=${db:Status-Abbrev}\\t${Version}", package,
+        "dpkg-query",
+        "-W",
+        "-f=${db:Status-Abbrev}\\t${Version}",
+        package,
         trust_exit_code=False,
     )
     if result.exit_code != 0 or "\t" not in result.stdout:
@@ -132,12 +135,7 @@ async def _detect_one(req: Requirement) -> dict[str, Any]:
             else:
                 info["status"] = "satisfied"
 
-    elif req.detect_kind == "file":
-        exists = Path(req.detect_target).exists()
-        info["status"] = "satisfied" if exists else "missing"
-        info["detail"]["path"] = req.detect_target
-
-    elif req.detect_kind == "device":
+    elif req.detect_kind == "file" or req.detect_kind == "device":
         exists = Path(req.detect_target).exists()
         info["status"] = "satisfied" if exists else "missing"
         info["detail"]["path"] = req.detect_target
@@ -169,8 +167,7 @@ async def _detect_one(req: Requirement) -> dict[str, Any]:
 async def detect_all() -> dict[str, Any]:
     items = [await _detect_one(req) for req in REQUIREMENTS]
     blocking = [
-        i for i in items
-        if not i["optional"] and i["status"] in {"missing", "outdated", "degraded"}
+        i for i in items if not i["optional"] and i["status"] in {"missing", "outdated", "degraded"}
     ]
     return {
         "distro_tag": distro_tag(),

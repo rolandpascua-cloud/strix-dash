@@ -17,13 +17,14 @@ Design rules, applied uniformly:
 
 from __future__ import annotations
 
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
 from backend import config
+from backend.controls import confirm
 from backend.core import errors, sysfs
 from backend.core.runner import run, run_tool
-from backend.controls import confirm
 
 # ---------------------------------------------------------------------------
 # Read
@@ -100,9 +101,7 @@ async def read_all() -> dict[str, Any]:
     battery_node = sysfs.describe(config.BATTERY_CHARGE_LIMIT)
     backlight_node = sysfs.describe(config.KBD_BACKLIGHT)
 
-    ppt = {
-        name: sysfs.describe(config.ASUS_PLATFORM / name) for name in config.PPT_NODES
-    }
+    ppt = {name: sysfs.describe(config.ASUS_PLATFORM / name) for name in config.PPT_NODES}
 
     from backend.collectors import xrt
 
@@ -233,13 +232,18 @@ async def set_kbd_backlight(value: int) -> dict[str, Any]:
 
 async def set_npu_pmode(value: str) -> dict[str, Any]:
     if value not in config.NPU_PMODES:
-        raise errors.invalid_value(
-            "pmode", f"must be one of {', '.join(config.NPU_PMODES)}"
-        )
+        raise errors.invalid_value("pmode", f"must be one of {', '.join(config.NPU_PMODES)}")
     # The sudoers rule enumerates these five values literally, so a value not in
     # NPU_PMODES would be refused by sudo even if it got this far.
     result = await run(
-        [config.TOOLS["sudo"], "-n", config.TOOLS["xrt-smi"], "configure", "--pmode", value],
+        [
+            config.TOOLS["sudo"],
+            "-n",
+            config.TOOLS["xrt-smi"],
+            "configure",
+            "--pmode",
+            value,
+        ],
         tool="sudo",
         timeout=20,
     )
@@ -307,7 +311,7 @@ def _validate_curve(points: list[dict[str, int]]) -> list[dict[str, int]]:
 
     # A non-monotonic curve is meaningless to the firmware and a good sign the
     # caller made a mistake; reject rather than write something incoherent.
-    for previous, current in zip(cleaned, cleaned[1:]):
+    for previous, current in pairwise(cleaned):
         if current["temp"] < previous["temp"]:
             raise errors.invalid_value(
                 "fan curve", "temperatures must be non-decreasing across points"
@@ -342,7 +346,7 @@ async def set_fan_curve(fan: int, points: list[dict[str, int]]) -> dict[str, Any
         )
 
     verified = all(
-        a["temp"] == c["temp"] and a["pwm"] == c["pwm"] for a, c in zip(after, cleaned)
+        a["temp"] == c["temp"] and a["pwm"] == c["pwm"] for a, c in zip(after, cleaned, strict=True)
     )
     return {"requested": cleaned, "applied": after, "verified": verified, "raw": after}
 
