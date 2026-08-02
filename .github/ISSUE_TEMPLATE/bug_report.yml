@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in strix-dash is wrong or unavailable
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do **not** paste raw tool output. It can contain your hostname,
+        BIOS version, machine-id, PCI addresses and filesystem UUIDs.
+        `GET /api/v1/capabilities` is already free of identifying data.
+
+  - type: textarea
+    id: capabilities
+    attributes:
+      label: Capability report
+      description: Output of `curl -s localhost:10001/api/v1/capabilities`
+      render: json
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Machine
+      placeholder: ASUS ROG Flow Z13 GZ302EA / Ryzen AI MAX+ 395
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS and kernel
+      placeholder: AMD Ryzen AI Developer Platform 1 (rex), 6.18.35+rex+2-amd64
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true

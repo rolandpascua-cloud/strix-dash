@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node (used only to build the stylesheet)
+node_modules/
+package-lock.json
+
+# Local captures that have NOT been through scripts/sanitize-fixtures.sh.
+# Never commit raw tool output straight off a machine.
+tests/fixtures/local/
+*.raw
+
+# Logs and runtime state
+*.log
+staging/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store

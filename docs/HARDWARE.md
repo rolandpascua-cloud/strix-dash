@@ -1,0 +1,57 @@
+# Hardware notes
+
+Verified on an ASUS ROG Flow Z13 (GZ302EA), Ryzen AI MAX+ 395, Debian 13.
+
+## Control surface
+
+| Control | Path | Notes |
+|---|---|---|
+| Performance profile | `/sys/firmware/acpi/platform_profile` | `quiet balanced performance` |
+| Thermal policy | `asus-nb-wmi/throttle_thermal_policy` | 0/1/2 |
+| Fan curve | hwmon named `asus_custom_fan_curve` | 8 points x 2 fans |
+| Fan RPM | hwmon named `asus` | `fan1_input`, `fan2_input` |
+| Battery limit | `/sys/class/power_supply/BAT0/charge_control_end_threshold` | 20-100 |
+| Keyboard backlight | `/sys/class/leds/asus::kbd_backlight/brightness` | 0-3, **no colour** |
+| NPU power mode | `xrt-smi configure --pmode` | `default powersaver balanced performance turbo` |
+
+## hwmon indices are not stable
+
+The fan-curve device was `hwmon10` at time of writing. Indices are assigned in
+probe order and change across reboots — always resolve by reading
+`/sys/class/hwmon/*/name`. `install.sh` does this when generating the tmpfiles
+config, and the backend repeats it at every startup.
+
+## ppt_* power limits: unit unknown
+
+All five nodes (`ppt_pl1_spl`, `ppt_pl2_sppt`, `ppt_fppt`, `ppt_apu_sppt`,
+`ppt_platform_sppt`) read `5`. That is not plausibly watts for a 395-class part,
+and the driver exposes no range. They are therefore **read-only**: displayed by
+node name with their raw value, absent from the sysfs write allowlist, and
+absent from the tmpfiles grant.
+
+To enable them, confirm the semantics against the `asus-wmi` driver source, then
+set `PPT_WRITABLE = True` in `backend/config.py` and uncomment the corresponding
+lines in the tmpfiles template.
+
+## Memory: three sources that disagree
+
+| Source | Reports | Value here |
+|---|---|---|
+| `rocm-smi --showmeminfo vram` | Fixed BIOS carveout | 512 MB, ~90% used at idle |
+| `mem_info_gtt_total` | Dynamically-shared pool | ~107 GB |
+| `ttm pages_limit` | Kernel ceiling on that pool | 28174103 pages |
+
+Present GTT as primary. The carveout's high utilisation is normal and is not a
+capacity limit.
+
+## Tool quirks
+
+- `flm`, `rocminfo`, `amd-ttm`, `rocm-smi` emit ANSI escapes **even when piped**.
+  Only `xrt-smi` offers `--batch` to suppress them.
+- `tuned-adm active` **exits 0 even when its daemon is down**, printing
+  `Preset profile:` instead of `Current active profile:`. Never trust its exit code.
+- `xrt-smi -f JSON` requires `-o <file>`; it exits 1 without one.
+- `rocm-smi --json` alone exits 1 — it needs explicit `--show*` queries, and all
+  its values are strings.
+- `rocminfo`'s `aie2p` agent has an **empty ISA block**. A parser that indexes
+  `isa[0]` crashes.
