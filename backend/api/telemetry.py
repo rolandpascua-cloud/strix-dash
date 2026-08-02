@@ -44,7 +44,16 @@ async def _envelope(
 
 @router.get("/flm/validate")
 async def flm_validate(force: bool = Query(False)) -> Any:
-    return await _envelope("flm", "flm_validate", flm.validate, force=force)
+    """NPU stack validation, plus IOMMU state.
+
+    IOMMU is composed in here rather than inside the flm collector: it is host
+    information, not something flm reports, but it belongs on the NPU card
+    because it governs how the accelerator's DMA is translated.
+    """
+    result = await _envelope("flm", "flm_validate", flm.validate, force=force)
+    if isinstance(result, dict) and result.get("ok"):
+        result["data"]["iommu"] = host.iommu()
+    return result
 
 
 @router.get("/flm/version")

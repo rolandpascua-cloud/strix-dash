@@ -3,7 +3,7 @@
 // Diffs are strictly on-demand: each one reads thousands of dpkg records from
 // two admindirs, so it is never attached to a poller.
 
-import { get } from "./api.js";
+import { get, post } from "./api.js";
 import { badge, esc, num } from "./fmt.js";
 
 const $ = (id) => document.getElementById(id);
@@ -78,6 +78,37 @@ async function runDiff() {
   }
 }
 
+async function createSnapshot(button) {
+  const status = $("create-status");
+  // State the retention caveat BEFORE taking it, not after: the platform's own
+  // cleanup preserves only factory.snapshot and removes everything else.
+  const proceed = window.confirm(
+    "Take a read-only btrfs snapshot of the running system?\n\n" +
+    "It is named from the current date and time.\n\n" +
+    "Retention: the platform's own snapshot cleanup preserves ONLY " +
+    "factory.snapshot and deletes every other *.snapshot when it next runs " +
+    "(for example during a system update). Treat this as a short-term " +
+    "checkpoint, not durable storage."
+  );
+  if (!proceed) return;
+
+  button.disabled = true;
+  status.innerHTML = `<span class="text-ink-400">Creating snapshot…</span>`;
+  try {
+    const { data } = await post("/snapshots/create");
+    status.innerHTML =
+      `<span class="text-ok-300">Created <code class="font-mono">${esc(data.created)}</code>` +
+      (data.package_count ? ` — ${data.package_count} packages` : "") + `</span>`;
+    await initSnapshots();
+  } catch (error) {
+    status.innerHTML =
+      `<span class="${error.status === 200 ? "text-warn-300" : "text-crit-300"}">` +
+      `${esc(error.message)}${error.hint ? ` — ${esc(error.hint)}` : ""}</span>`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 export async function initSnapshots() {
   const panel = $("snapshots-panel");
   try {
@@ -111,6 +142,14 @@ export async function initSnapshots() {
         <th class="text-left font-medium py-1">Kind</th>
       </tr></thead><tbody>${rows}</tbody></table>
 
+    <div class="flex items-center gap-3 flex-wrap mb-4 pb-4 border-b border-ink-700">
+      <button id="create-snapshot" class="btn">+ Create snapshot</button>
+      <span class="text-[0.68rem] text-ink-500">
+        Named from the current date and time. Preserved only until the
+        platform's next snapshot cleanup.</span>
+      <span id="create-status" class="text-xs ml-auto"></span>
+    </div>
+
     <div class="flex items-end gap-3 flex-wrap mb-4">
       <label class="flex flex-col gap-1">
         <span class="text-[0.68rem] uppercase tracking-wide text-ink-500">Base</span>
@@ -130,4 +169,5 @@ export async function initSnapshots() {
       the full package database from both snapshots.</p></div>`;
 
   $("diff-run").addEventListener("click", runDiff);
+  $("create-snapshot").addEventListener("click", (e) => createSnapshot(e.currentTarget));
 }

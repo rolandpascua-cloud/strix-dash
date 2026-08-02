@@ -4,6 +4,7 @@
 # one sudoers entry.
 #
 #   strix-dash-priv-helper.sh batterylimit <40-100>
+#   strix-dash-priv-helper.sh snapshot-create
 #
 # SECURITY MODEL
 #
@@ -28,6 +29,7 @@
 set -euo pipefail
 
 BATTERY_NODE=/sys/class/power_supply/BAT0/charge_control_end_threshold
+SNAPSHOT_DIR=/var/snapshots/system
 
 # Matches z13ctl's documented range. The kernel itself accepts lower values,
 # but the two paths must behave identically or the same request would succeed
@@ -56,6 +58,22 @@ case "$VERB" in
         printf '%s' "$VALUE" > "$BATTERY_NODE" || die "kernel rejected $VALUE"
         # Echo the read-back so the caller verifies hardware state, not intent.
         cat "$BATTERY_NODE"
+        ;;
+    snapshot-create)
+        # The caller supplies NOTHING. The name is generated here from the
+        # clock, so no caller-controlled string ever reaches a path.
+        command -v btrfs >/dev/null 2>&1 || die "btrfs-progs is not installed"
+        [ -d "$SNAPSHOT_DIR" ] || die "$SNAPSHOT_DIR is not present"
+
+        name="$(date +%Y%m%d-%H%M%S).snapshot"
+        target="$SNAPSHOT_DIR/$name"
+        [ -e "$target" ] && die "a snapshot for this second already exists"
+
+        # Read-only, matching how the platform's own tooling takes them.
+        btrfs subvolume snapshot -r / "$target" >/dev/null 2>&1 \
+            || die "btrfs refused to snapshot / to $target"
+
+        printf '%s\n' "$name"
         ;;
     *)
         die "unknown verb '${VERB}'"

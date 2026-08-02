@@ -28,7 +28,7 @@ from typing import Any
 from backend import config
 from backend.core import errors
 from backend.core.cache import cache
-from backend.core.runner import run_tool
+from backend.core.runner import run, run_tool
 
 # db:Status-Abbrev is two chars (want + state) plus an error flag column.
 _QUERY_FORMAT = "${db:Status-Abbrev}\\t${binary:Package}\\t${Version}\\n"
@@ -229,4 +229,48 @@ async def diff(base_id: str, target_id: str) -> dict[str, Any]:
             "base_total": len(base),
             "target_total": len(target),
         },
+    }
+
+
+async def create() -> dict[str, Any]:
+    """Take a read-only btrfs snapshot of the running root.
+
+    The helper generates the timestamped name itself -- nothing
+    caller-supplied ever reaches a path.
+
+    Note the retention caveat surfaced to the user: the platform's own
+    amd-halo-snapshot cleanup exempts exactly one name, factory.snapshot, and
+    deletes every other *.snapshot the next time it runs. A snapshot taken here
+    is therefore a short-term checkpoint, not durable storage.
+    """
+    import os
+
+    if not os.path.exists(config.PRIV_HELPER):
+        raise errors.ToolError(
+            code=errors.ErrorCode.NOT_SUPPORTED,
+            message="The privileged helper is not installed",
+            hint="Run scripts/install.sh (or deploy.sh) to install it.",
+        )
+
+    result = await run(
+        [config.TOOLS["sudo"], "-n", config.PRIV_HELPER, "snapshot-create"],
+        tool="sudo",
+        timeout=120,
+    )
+    if not result.ok:
+        raise result.error or errors.ToolError(
+            code=errors.ErrorCode.TOOL_FAILED, message="Snapshot creation failed"
+        )
+
+    name = result.stdout.strip()
+    created = next((e for e in enumerate_snapshots() if e["id"] == name), None)
+    return {
+        "created": name,
+        "path": created["path"] if created else None,
+        "package_count": len(await packages_for(name)) if created else None,
+        "retention_warning": (
+            "The platform's own snapshot cleanup preserves only "
+            "factory.snapshot and removes every other *.snapshot when it next "
+            "runs. Treat this as a short-term checkpoint."
+        ),
     }

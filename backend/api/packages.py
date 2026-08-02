@@ -21,6 +21,15 @@ async def list_snapshots() -> Any:
         return models.respond(exc, source="dpkg-query")
 
 
+@router.post("/snapshots/create")
+async def create_snapshot() -> Any:
+    """Take a timestamped read-only snapshot of the running root."""
+    try:
+        return models.ok(await snapshots.create(), source="btrfs")
+    except ToolError as exc:
+        return models.respond(exc, source="btrfs")
+
+
 @router.get("/snapshots/{snapshot_id}/packages")
 async def snapshot_packages(
     snapshot_id: str,

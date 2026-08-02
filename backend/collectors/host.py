@@ -37,6 +37,63 @@ def os_release() -> dict[str, str]:
     return out
 
 
+def iommu() -> dict[str, Any]:
+    """IOMMU state, as it bears on NPU/GPU DMA.
+
+    The cmdline parameter and the actual state are different questions: an
+    absent `amd_iommu=`/`iommu=` argument means the kernel used its default,
+    not that the IOMMU is off. Report both so the panel cannot imply one from
+    the other.
+    """
+    try:
+        cmdline = Path("/proc/cmdline").read_text().strip()
+    except OSError:
+        cmdline = ""
+
+    # The equivalent of: cat /proc/cmdline | grep iommu
+    params = [tok for tok in cmdline.split() if "iommu" in tok.lower()]
+
+    devices = []
+    root = Path("/sys/class/iommu")
+    if root.is_dir():
+        devices = sorted(entry.name for entry in root.iterdir())
+
+    groups = 0
+    group_root = Path("/sys/kernel/iommu_groups")
+    if group_root.is_dir():
+        groups = sum(1 for _ in group_root.iterdir())
+
+    # Resolve the NPU's PCI device through its accel node rather than matching
+    # on PCI class: two devices here share class 0x1180, and picking the first
+    # match reported the wrong IOMMU group.
+    npu_bdf = npu_group = npu_group_type = None
+    try:
+        pci_dev = (config.NPU_DEVICE.parent.parent / "class/accel/accel0/device").resolve()
+    except OSError:
+        pci_dev = None
+    if pci_dev is None or not pci_dev.exists():
+        candidate = Path("/sys/class/accel/accel0/device")
+        pci_dev = candidate.resolve() if candidate.exists() else None
+    if pci_dev is not None and pci_dev.exists():
+        npu_bdf = pci_dev.name
+        group_link = pci_dev / "iommu_group"
+        if group_link.exists():
+            resolved = group_link.resolve()
+            npu_group = resolved.name
+            npu_group_type = sysfs.read_text(resolved / "type")
+
+    return {
+        "enabled": bool(devices),
+        "cmdline_params": params,
+        "cmdline_source": "explicit" if params else "kernel default",
+        "devices": devices,
+        "groups": groups,
+        "npu_bdf": npu_bdf,
+        "npu_group": npu_group,
+        "npu_group_type": npu_group_type,
+    }
+
+
 def static_info() -> dict[str, Any]:
     """Values that cannot change without a reboot."""
     rel = os_release()

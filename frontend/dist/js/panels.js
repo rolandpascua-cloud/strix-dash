@@ -28,6 +28,25 @@ export function renderError(targetId, error) {
     </div>`;
 }
 
+/** IOMMU state for the NPU card.
+ *
+ *  The cmdline parameter and the actual state answer different questions: no
+ *  `iommu=` argument means the kernel chose its default, NOT that it is off.
+ *  Both are shown so neither implies the other.
+ */
+function iommuRows(iommu) {
+  if (!iommu) return "";
+  const params = (iommu.cmdline_params || []).join(" ");
+  return `
+    <div class="mt-3 pt-2 border-t border-ink-700">
+      <div class="text-[0.68rem] uppercase tracking-wide text-ink-500 mb-1">IOMMU</div>
+      ${kv("State", iommu.enabled ? "on" : "off")}
+      ${kv("/proc/cmdline", params || `none (${iommu.cmdline_source})`, { mono: true })}
+      ${kv("NPU group", iommu.npu_group
+            ? `${iommu.npu_group} (${iommu.npu_group_type ?? "?"})` : "—")}
+    </div>`;
+}
+
 export function npu(data) {
   const failed = data.failed_checks || [];
   const tone = data.ready ? "ok" : failed.length ? "crit" : "warn";
@@ -52,6 +71,7 @@ export function npu(data) {
     ${kv("Firmware", device.firmware_version ?? "—", { mono: true })}
     ${kv("amdxdna", data.amdxdna_version ?? "—", { mono: true })}
     ${kv("memlock", data.memlock_limit ?? "—", { mono: true })}
+    ${iommuRows(data.iommu)}
     <div class="mt-3 pt-2 border-t border-ink-700">${checks}</div>`;
 }
 
