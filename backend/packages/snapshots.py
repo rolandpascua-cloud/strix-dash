@@ -249,7 +249,9 @@ async def create() -> dict[str, Any]:
         raise errors.ToolError(
             code=errors.ErrorCode.NOT_SUPPORTED,
             message="The privileged helper is not installed",
-            hint="Run scripts/install.sh (or deploy.sh) to install it.",
+            hint=(
+                "The helper is installed by install.sh and reinstalled by deploy.sh. If it vanished after a code change, the deploy dropped it -- re-run sudo ./scripts/deploy.sh."
+            ),
         )
 
     result = await run(
