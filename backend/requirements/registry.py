@@ -130,8 +130,10 @@ REQUIREMENTS: tuple[Requirement, ...] = (
         source_kind="manual",
         optional=True,
         remediation=(
-            "Not packaged for Debian. Install manually; everything else on the "
-            "Controls page works without it via native sysfs."
+            "Not in Debian. Download the .deb from "
+            "https://github.com/dahui/z13ctl/ then: "
+            "sudo apt install ./z13ctl_*.deb && sudo z13ctl setup. "
+            "Everything else on the Controls page works without it via sysfs."
         ),
     ),
 )

@@ -28,6 +28,7 @@ endpoint errors -- the rest of the dashboard is unaffected.
 | Fan RPM | hwmon named `asus` | `fan1_input`, `fan2_input` |
 | Battery limit | `/sys/class/power_supply/BAT0/charge_control_end_threshold` | 20-100 |
 | Keyboard backlight | `/sys/class/leds/asus::kbd_backlight/brightness` | 0-3, **no colour** |
+| Aura RGB | none | No multicolour LED node exists. Requires [z13ctl](https://github.com/dahui/z13ctl/). |
 | NPU power mode | `xrt-smi configure --pmode` | `default powersaver balanced performance turbo` |
 
 ## hwmon indices are not stable

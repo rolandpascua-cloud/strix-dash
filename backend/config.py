@@ -43,7 +43,10 @@ TOOLS: dict[str, str] = {
 }
 
 INSTALL_HINTS: dict[str, str] = {
-    "z13ctl": "Third-party ASUS ROG tool; install manually from its project page.",
+    "z13ctl": (
+        "Download the .deb from https://github.com/dahui/z13ctl/ then: "
+        "sudo apt install ./z13ctl_*.deb && sudo z13ctl setup"
+    ),
     "flm": "sudo apt install ./fastflowlm_<version>_debian13_amd64.deb",
     "tuned-adm": "sudo apt install tuned",
 }

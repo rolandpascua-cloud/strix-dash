@@ -26,6 +26,54 @@ Halo machine. Only the **Controls** tab is chassis-specific.
 
 ---
 
+## Quick start
+
+```bash
+# 1. Check prerequisites (read-only, no root needed)
+./scripts/bootstrap-npu.sh --check-only
+
+# 2. Install as a system service
+sudo ./scripts/install.sh
+
+# 3. Open the dashboard
+xdg-open http://127.0.0.1:10001
+```
+
+`install.sh` creates the `strix-dash` service user, installs the systemd unit,
+the scoped sudoers rules and the tmpfiles sysfs grants, then prints a capability
+report so you can see immediately what is available and what is not.
+
+### Optional: RGB lighting via z13ctl
+
+Everything on the Controls tab works through native sysfs **except Aura RGB**,
+which has no kernel interface on this machine — `/sys/class/leds` exposes only a
+0–3 keyboard brightness channel, no multicolour node. That one feature needs
+[z13ctl](https://github.com/dahui/z13ctl/):
+
+```bash
+# Download z13ctl_<version>_linux_amd64.deb from the releases page, then:
+sudo apt install ./z13ctl_*.deb
+sudo z13ctl setup
+```
+
+Restart strix-dash afterwards (`sudo systemctl restart strix-dash`, or press
+**Refresh**) so the capability probe picks it up. Without it the RGB controls
+render disabled with a reason; nothing else is affected.
+
+> z13ctl is third-party software with no Debian packaging we can verify, so
+> strix-dash offers **no automatic install path** for it — the Requirements tab
+> lists it as optional and manual-install only. Verify the download against the
+> `checksums.txt` published with the release before installing.
+
+### Updating
+
+```bash
+sudo ./scripts/deploy.sh    # after pulling changes
+sudo ./scripts/uninstall.sh # remove (--purge also drops user, config, logs)
+```
+
+---
+
 ## Why
 
 The vendor dashboard's package inventory is a hardcoded Python list in a file
