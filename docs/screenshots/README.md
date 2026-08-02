@@ -1,18 +1,19 @@
 # Screenshots
 
-Referenced from the top-level README. Expected files:
+Referenced from the top-level README.
 
-| File | Page |
-|---|---|
-| `overview.png` | Overview — NPU stack, unified memory, GPU, host, thermals, capabilities |
-| `requirements.png` | Requirements — prerequisite detection |
-| `snapshots.png` | Snapshots — auditor and package diff |
-| `controls.png` | Controls — hardware controls |
+Regenerate with:
 
-Capture them at a wide viewport (2560px or more); the Overview grid reflows to
-fewer columns on narrow screens and the ultrawide layout is a feature worth
-showing.
+```bash
+./scripts/capture-screenshots.sh            # against the installed service
+./scripts/capture-screenshots.sh http://127.0.0.1:10002   # or a dev server
+```
+
+Capture against the **installed** service (`:10001`) rather than a dev server.
+The installed one runs as the `strix-dash` user with the tmpfiles grants, so
+controls show their real writable state; a dev server runs as you and renders
+several of them read-only, which misrepresents the app.
 
 Before committing, check the frame for anything host-identifying — the Host
 card shows the hostname and machine model, and the header shows the hostname
-next to the wordmark.
+beside the wordmark.
