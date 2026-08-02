@@ -26,11 +26,9 @@ def _writable_registry() -> set[Path]:
         config.BATTERY_CHARGE_LIMIT,
         config.KBD_BACKLIGHT,
     }
-    # PPT nodes are registered but gated separately by config.PPT_WRITABLE --
-    # their units are unconfirmed (every node reads "5"), so v1 keeps them
-    # read-only rather than shipping a mislabelled power-limit slider.
-    if config.PPT_WRITABLE:
-        allowed.update(config.ASUS_PLATFORM / n for n in config.PPT_NODES)
+    # The ppt_* power-limit nodes are deliberately absent: their units are
+    # unconfirmed, and a mislabelled write to a power limit is the one change
+    # here that could damage hardware. They are read-only telemetry only.
 
     fan_curve = find_hwmon(config.HWMON_FAN_CURVE_DRIVER)
     if fan_curve is not None:

@@ -74,10 +74,11 @@ no signature to check, and the UI says so rather than implying otherwise.
 
 - **TDP writes.** The `ppt_*` nodes all read `5`; their unit is unconfirmed.
   Writing a wrong-unit value to a power limit is the highest-consequence bug
-  available here, so they are read-only and not in the sysfs allowlist.
+  available here, so they are read-only telemetry and appear nowhere in the
+  sysfs write allowlist. There is no disabled code path to re-enable.
 - **Undervolt.** Instability from an aggressive curve-optimiser offset appears
-  as a crash minutes later, which read-back cannot catch. Not shipped without a
-  revert-on-unclean-boot watchdog.
+  as a crash minutes later, which read-back cannot catch. It is not implemented,
+  and is not declared as a capability.
 
 ## Hardening note
 

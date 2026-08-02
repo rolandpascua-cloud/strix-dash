@@ -149,15 +149,6 @@ def _probe_features(sysfs_nodes: dict[str, Any]) -> list[Capability]:
             hint=config.INSTALL_HINTS.get("z13ctl"),
         )
     )
-    feats.append(
-        Capability(
-            id="feature:undervolt",
-            available=z13,
-            reason=None if z13 else "curve optimiser is not exposed via sysfs",
-            hint=config.INSTALL_HINTS.get("z13ctl"),
-        )
-    )
-
     backlight = sysfs_nodes["kbd_backlight"]
     feats.append(
         Capability(
@@ -176,18 +167,6 @@ def _probe_features(sysfs_nodes: dict[str, Any]) -> list[Capability]:
             id="feature:fan_curve",
             available=bool(fan["exists"]),
             reason=None if fan["exists"] else "asus_custom_fan_curve hwmon not present",
-        )
-    )
-
-    # Deliberately unavailable: the ppt_* nodes all read "5", which is not
-    # plausibly watts. Shipping a "TDP (W)" slider on that guess is the one bug
-    # here that could damage hardware, so v1 exposes them read-only.
-    feats.append(
-        Capability(
-            id="feature:tdp_write",
-            available=False,
-            reason="ppt_* units are unconfirmed; read-only in this version",
-            hint="See docs/HARDWARE.md.",
         )
     )
 

@@ -140,11 +140,14 @@ def test_write_refuses_paths_outside_the_allowlist(tmp_path) -> None:
     assert target.read_text() == "0"
 
 
-def test_ppt_nodes_are_not_writable_in_this_version() -> None:
-    """TDP stays read-only until the ppt_* units are confirmed."""
+def test_ppt_nodes_have_no_write_path() -> None:
+    """Power limits are read-only telemetry with no write path at all.
+
+    Their units are unconfirmed, and a mislabelled write to a power limit is
+    the one change in this app that could damage hardware.
+    """
     from backend import config
 
-    assert config.PPT_WRITABLE is False
     allowed = sysfs._writable_registry()
     for name in config.PPT_NODES:
         assert (config.ASUS_PLATFORM / name) not in allowed

@@ -116,9 +116,8 @@ Three design rules do most of the work:
 
 | Feature | Status |
 |---|---|
-| TDP (`ppt_*`) | **Read-only.** All five nodes read `5`, which is not plausibly watts. Shipping a "TDP (W)" slider on that guess could damage hardware. |
+| TDP (`ppt_*`) | **Read-only telemetry, no write path.** All five nodes read `5`, which is not plausibly watts. Shipping a "TDP (W)" slider on that guess could damage hardware. |
 | RGB / Aura | Unavailable. No multicolour LED node exists — only a 0–3 brightness channel. Requires `z13ctl`. |
-| Undervolt | Unavailable. Not exposed via sysfs; requires `z13ctl`. |
 | NPU power mode | The `amdxdna` driver may reject `DRM_IOCTL_AMDXDNA_SET_STATE` with `EACCES`. Verify with `sudo xrt-smi configure --pmode performance`. |
 | `SystemCallFilter` | Deliberately unset in the unit — see the comment there; a seccomp filter forces `NoNewPrivileges` and breaks setuid `sudo`. |
 

@@ -94,9 +94,9 @@ PLATFORM_PROFILE_CHOICES = Path("/sys/firmware/acpi/platform_profile_choices")
 THROTTLE_POLICY = ASUS_PLATFORM / "throttle_thermal_policy"
 PANEL_OD = ASUS_PLATFORM / "panel_od"
 
-# Power limits. Every node currently reads "5", which is not plausibly watts --
-# the unit is unconfirmed, so v1 exposes these read-only and labels them by node
-# name rather than inventing a "TDP (W)" slider. See docs/HARDWARE.md.
+# Power limits. Read-only telemetry: every node reads the same value, which is
+# not plausibly watts, so these are surfaced by node name and never written.
+# There is no write path for them at all -- see docs/HARDWARE.md.
 PPT_NODES = (
     "ppt_pl1_spl",
     "ppt_pl2_sppt",
@@ -104,7 +104,6 @@ PPT_NODES = (
     "ppt_apu_sppt",
     "ppt_platform_sppt",
 )
-PPT_WRITABLE = False
 
 BATTERY_CHARGE_LIMIT = Path("/sys/class/power_supply/BAT0/charge_control_end_threshold")
 BATTERY_LIMIT_RANGE = (20, 100)

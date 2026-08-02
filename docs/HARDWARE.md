@@ -45,9 +45,10 @@ and the driver exposes no range. They are therefore **read-only**: displayed by
 node name with their raw value, absent from the sysfs write allowlist, and
 absent from the tmpfiles grant.
 
-To enable them, confirm the semantics against the `asus-wmi` driver source, then
-set `PPT_WRITABLE = True` in `backend/config.py` and uncomment the corresponding
-lines in the tmpfiles template.
+There is no write path for them at all -- not a disabled one. Adding it would
+mean confirming the semantics against the `asus-wmi` driver source, adding the
+nodes to `_writable_registry()` in `backend/core/sysfs.py`, and uncommenting the
+corresponding lines in the tmpfiles template.
 
 ## Memory: three sources that disagree
 

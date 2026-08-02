@@ -121,8 +121,8 @@ REQUIREMENTS: tuple[Requirement, ...] = (
     Requirement(
         id="z13ctl",
         name="z13ctl",
-        summary="ASUS ROG Flow Z13 control tool: Aura RGB and CPU undervolt.",
-        required_for=("RGB lighting", "Undervolt (curve optimiser)"),
+        summary="ASUS ROG Flow Z13 control tool, used here for Aura RGB lighting.",
+        required_for=("RGB lighting",),
         detect_kind="binary",
         detect_target="z13ctl",
         # Third-party with no packaged source we can verify, so no automatic

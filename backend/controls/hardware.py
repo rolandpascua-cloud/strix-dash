@@ -5,14 +5,15 @@ Design rules, applied uniformly:
 * **sysfs first.** Native nodes exist for performance profile, thermal policy,
   fan curves, battery limit and keyboard backlight -- all reachable through the
   tmpfiles.d group grant with no privilege escalation at all. z13ctl is only
-  needed for RGB colour and undervolt, which have no kernel interface here.
+  needed for RGB colour, which has no kernel interface on this hardware.
 * **Clamp server-side.** Never trust a slider.
 * **Read back.** Every write returns what the hardware actually holds
   afterwards, not an echo of the request. Firmware silently clamping a value is
   reported as ``verified: false`` -- a first-class UI state, not an error.
-* **TDP stays read-only.** All five ``ppt_*`` nodes read "5", which is not
-  plausibly watts. Shipping a "TDP (W)" slider on that guess is the one change
-  here that could damage hardware.
+* **TDP is read-only telemetry.** All five ``ppt_*`` nodes read "5", which is
+  not plausibly watts, so there is no write path for them at all. Shipping a
+  "TDP (W)" slider on that guess is the one change here that could damage
+  hardware.
 """
 
 from __future__ import annotations
