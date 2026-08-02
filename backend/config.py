@@ -109,7 +109,10 @@ PPT_NODES = (
 )
 
 BATTERY_CHARGE_LIMIT = Path("/sys/class/power_supply/BAT0/charge_control_end_threshold")
-BATTERY_LIMIT_RANGE = (20, 100)
+# 40 is z13ctl's documented floor. The kernel accepts lower, but both write
+# paths must agree or the same request would succeed or fail depending on
+# which backend happened to be used.
+BATTERY_LIMIT_RANGE = (40, 100)
 
 # Single-channel brightness only. There is no multicolour LED node on this
 # machine, so RGB colour/effects are z13ctl-only and cannot be done via sysfs.
@@ -162,6 +165,7 @@ else:
 
 LOG_DIR = Path("/var/log/strix-dash")
 STAGING_DIR = Path("/var/lib/strix-dash/staging")
+PRIV_HELPER = "/usr/lib/strix-dash/backend/strix-dash-priv-helper.sh"
 
 BACKPORTS_SOURCES = Path("/etc/apt/sources.list.d/debian-backports.sources")
 BACKPORTS_CONTENT = """\

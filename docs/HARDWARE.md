@@ -26,7 +26,7 @@ endpoint errors -- the rest of the dashboard is unaffected.
 | Thermal policy | `asus-nb-wmi/throttle_thermal_policy` | 0/1/2 |
 | Fan curve | hwmon named `asus_custom_fan_curve` | 8 points x 2 fans |
 | Fan RPM | hwmon named `asus` | `fan1_input`, `fan2_input` |
-| Battery limit | `/sys/class/power_supply/BAT0/charge_control_end_threshold` | 20-100 |
+| Battery limit | `/sys/class/power_supply/BAT0/charge_control_end_threshold` | 40-100; see the ownership note below |
 | Keyboard backlight | `/sys/class/leds/asus::kbd_backlight/brightness` | 0-3, **no colour** |
 | Aura RGB | none | No multicolour LED node exists. Requires [z13ctl](https://github.com/dahui/z13ctl/). |
 | NPU power mode | `xrt-smi configure --pmode` | `default powersaver balanced performance turbo` |
@@ -73,3 +73,26 @@ capacity limit.
   its values are strings.
 - `rocminfo`'s `aie2p` agent has an **empty ISA block**. A parser that indexes
   `isa[0]` crashes.
+
+
+## The battery node is contested
+
+z13ctl's `setup` installs a udev rule that reassigns this node's group on every
+matching event:
+
+```
+ACTION=="add", SUBSYSTEM=="platform-profile", KERNELS=="asus-nb-wmi",
+  RUN+="/usr/bin/chgrp users .../charge_control_end_threshold"
+```
+
+That overwrites the group strix-dash's tmpfiles.d rule grants. Two packages
+cannot both own one node's group, and whichever udev rule runs last wins -- so
+the control would break unpredictably for whoever installed second.
+
+Rather than fight, `set_battery_limit()` prefers a direct sysfs write and falls
+back to `strix-dash-priv-helper.sh`, which runs as root and does not care who
+owns the node. The Controls tab reports which path was used in `backend`.
+
+The range is **40-100**, matching z13ctl. The kernel accepts lower values (39
+writes fine), but both paths must agree or the same request would succeed or
+fail depending on which backend happened to run.

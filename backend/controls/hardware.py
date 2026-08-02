@@ -18,6 +18,7 @@ Design rules, applied uniformly:
 
 from __future__ import annotations
 
+import os
 from itertools import pairwise
 from pathlib import Path
 from typing import Any
@@ -140,9 +141,14 @@ async def read_all() -> dict[str, Any]:
             "min": config.BATTERY_LIMIT_RANGE[0],
             "max": config.BATTERY_LIMIT_RANGE[1],
             "unit": "%",
-            "writable": battery_node["writable"],
+            # Writable through either path: our own grant, or the root helper
+            # when z13ctl's udev rule has taken ownership of the node.
+            "writable": bool(
+                battery_node["exists"]
+                and (battery_node["writable"] or os.path.exists(config.PRIV_HELPER))
+            ),
             "requires_confirm": False,
-            "source": "sysfs",
+            "source": "sysfs" if battery_node["writable"] else "priv-helper",
         },
         "kbd_backlight": {
             "id": "kbd-backlight",
@@ -218,10 +224,40 @@ async def set_throttle_policy(value: int) -> dict[str, Any]:
 
 
 async def set_battery_limit(value: int) -> dict[str, Any]:
+    """Set the charge limit, preferring a direct sysfs write.
+
+    z13ctl ships a udev rule that chgrps this node to "users" on every matching
+    event, which overwrites the group our tmpfiles.d rule grants. Two packages
+    cannot both own it, so rather than fight over ownership we fall back to the
+    privileged helper, which is root and does not care who owns the node.
+    """
     low, high = config.BATTERY_LIMIT_RANGE
     value = sysfs.clamp(int(value), low, high)
-    sysfs.write_int(config.BATTERY_CHARGE_LIMIT, value)
-    return _readback(config.BATTERY_CHARGE_LIMIT, value)
+
+    node = config.BATTERY_CHARGE_LIMIT
+    if not node.exists():
+        raise errors.not_supported("Battery limit", f"{node} is not present")
+
+    if os.access(node, os.W_OK):
+        sysfs.write_int(node, value)
+        result = _readback(node, value)
+        result["backend"] = "sysfs"
+        return result
+
+    if not os.path.exists(config.PRIV_HELPER):
+        raise errors.permission_denied(str(node))
+
+    run_result = await run(
+        [config.TOOLS["sudo"], "-n", config.PRIV_HELPER, "batterylimit", str(value)],
+        tool="sudo",
+        timeout=15,
+    )
+    if not run_result.ok:
+        raise run_result.error or errors.permission_denied(str(node))
+
+    result = _readback(node, value)
+    result["backend"] = "priv-helper"
+    return result
 
 
 async def set_kbd_backlight(value: int) -> dict[str, Any]:
