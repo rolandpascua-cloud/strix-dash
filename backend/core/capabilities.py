@@ -149,18 +149,6 @@ def _probe_features(sysfs_nodes: dict[str, Any]) -> list[Capability]:
             hint=config.INSTALL_HINTS.get("z13ctl"),
         )
     )
-    backlight = sysfs_nodes["kbd_backlight"]
-    feats.append(
-        Capability(
-            id="feature:led_brightness",
-            available=bool(backlight["writable"]),
-            reason=None if backlight["writable"] else "brightness node not writable",
-            hint=None
-            if backlight["writable"]
-            else "sudo systemd-tmpfiles --create /usr/lib/tmpfiles.d/strix-dash.conf",
-        )
-    )
-
     fan = sysfs_nodes["fan_curve_hwmon"]
     feats.append(
         Capability(
