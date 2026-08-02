@@ -4,7 +4,7 @@
 // per-item button -- never automatic, and there is deliberately no "check all".
 
 import { get, post } from "./api.js";
-import { badge, bytes, esc } from "./fmt.js";
+import { badge, esc } from "./fmt.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -53,9 +53,6 @@ function row(item) {
             <div class="text-xs font-mono text-ink-200">${esc(item.installed_version || "—")}</div>
             <div class="text-[0.68rem] text-ink-500">installed</div>
           </div>
-          ${canCheck
-            ? `<button class="btn text-xs" data-check="${esc(item.id)}">Check for updates</button>`
-            : ""}
           ${canCheck && ["missing", "outdated"].includes(item.status)
             ? `<button class="btn text-xs border-accent-500 text-accent-300"
                        data-install="${esc(item.id)}">Install</button>`
@@ -105,43 +102,6 @@ async function installOne(id, button) {
   }
 }
 
-async function checkOne(id, button) {
-  const target = document.querySelector(`[data-result="${CSS.escape(id)}"]`);
-  button.disabled = true;
-  target.innerHTML = `<span class="text-ink-400">Checking upstream…</span>`;
-
-  try {
-    const { data } = await post(`/requirements/${encodeURIComponent(id)}/check`);
-    const asset = data.asset;
-    const installed = document
-      .querySelector(`[data-req="${CSS.escape(id)}"] .font-mono`)
-      ?.textContent?.trim();
-
-    const current = installed && data.latest_version === installed;
-    target.innerHTML = `
-      <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-2 flex-wrap">
-          ${badge(current ? "ok" : "warn",
-                  current ? `already at ${data.latest_version}` : `latest ${data.latest_version}`)}
-          <span class="text-ink-500">for ${esc(data.distro_tag)}</span>
-        </div>
-        ${asset
-          ? `<div class="font-mono text-[0.68rem] text-ink-400 break-all">
-               ${esc(asset.name)} · ${bytes(asset.size)}
-               ${asset.digest ? `<br>${esc(asset.digest)}` : ""}
-             </div>`
-          : `<div class="text-crit-300">No asset matching ${esc(data.distro_tag)} in this release.</div>`}
-      </div>`;
-  } catch (error) {
-    const degraded = error.status === 200;
-    target.innerHTML =
-      `<span class="${degraded ? "text-ink-400" : "text-crit-300"}">` +
-      `${esc(error.message)}${error.hint ? ` — ${esc(error.hint)}` : ""}</span>`;
-  } finally {
-    button.disabled = false;
-  }
-}
-
 export async function initRequirements() {
   const panel = $("requirements-panel");
   panel.innerHTML = `<p class="text-sm text-ink-400">Detecting…</p>`;
@@ -168,9 +128,6 @@ export async function initRequirements() {
     </div>
     ${data.items.map(row).join("")}`;
 
-  panel.querySelectorAll("[data-check]").forEach((button) => {
-    button.addEventListener("click", () => checkOne(button.dataset.check, button));
-  });
   panel.querySelectorAll("[data-install]").forEach((button) => {
     button.addEventListener("click", () => installOne(button.dataset.install, button));
   });
