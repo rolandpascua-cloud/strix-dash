@@ -70,8 +70,13 @@ case "$VERB" in
         [ -e "$target" ] && die "a snapshot for this second already exists"
 
         # Read-only, matching how the platform's own tooling takes them.
-        btrfs subvolume snapshot -r / "$target" >/dev/null 2>&1 \
-            || die "btrfs refused to snapshot / to $target"
+        # Capture btrfs's own message rather than discarding it: "refused" on
+        # its own gives the caller nothing to act on, and the cause is usually
+        # environmental (a read-only bind mount, a missing subvolume) rather
+        # than anything about the request.
+        if ! out=$(btrfs subvolume snapshot -r / "$target" 2>&1); then
+            die "btrfs could not snapshot / to $target: $(printf '%s' "$out" | tail -1)"
+        fi
 
         printf '%s\n' "$name"
         ;;

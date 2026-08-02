@@ -35,8 +35,13 @@ LimitMEMLOCK=infinity
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadOnlyPaths=/usr/lib/strix-dash /usr/share/strix-dash /var/snapshots
+ReadOnlyPaths=/usr/lib/strix-dash /usr/share/strix-dash
 ReadWritePaths=/var/log/strix-dash
+# Creating a btrfs subvolume here needs write access, and sudo does NOT
+# escape this unit's mount namespace -- the privileged helper inherits it,
+# so a read-only bind would make btrfs fail even as root. The auditor only
+# ever reads; the sole writer is strix-dash-priv-helper.sh.
+ReadWritePaths=/var/snapshots
 # Hardware controls. The "-" prefix marks each as optional so the unit still
 # starts on a machine where the ASUS platform driver is absent.
 ReadWritePaths=-/sys/firmware/acpi/platform_profile

@@ -9,9 +9,9 @@ Statuses a requirement can report:
     outdated    installed, newer release available
     missing     not installed
     degraded    installed but not functional (e.g. tuned's daemon is stopped)
-    local-only  installed from a local .deb with NO repository origin, so apt
-                will never offer an update. fastflowlm is in this state today;
-                reporting it as "up-to-date" would be misleading.
+    local-only  installed from a local .deb, so apt has no repository to
+                upgrade it from. Not a fault -- fastflowlm ships this way -- but
+                distinct from "satisfied", which would imply apt is tracking it.
     unknown     detection failed
 """
 

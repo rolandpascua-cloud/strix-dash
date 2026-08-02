@@ -141,8 +141,8 @@ async def _detect_one(req: Requirement) -> dict[str, Any]:
             if not policy["has_repo_origin"]:
                 info["status"] = "local-only"
                 info["detail"]["note"] = (
-                    "Installed from a local .deb with no repository origin; "
-                    "apt will not offer updates for it."
+                    "Installed from a local .deb, so apt has no repository to "
+                    "upgrade it from. This is expected for FastFlowLM."
                 )
             elif policy["candidate"] and policy["installed"] != policy["candidate"]:
                 info["status"] = "outdated"

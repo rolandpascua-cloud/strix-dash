@@ -12,7 +12,7 @@ const TONE = {
   satisfied: "ok",
   outdated: "warn",
   degraded: "warn",
-  "local-only": "warn",
+  "local-only": "idle",
   missing: "crit",
   unknown: "idle",
 };
@@ -21,7 +21,7 @@ const LABEL = {
   satisfied: "satisfied",
   outdated: "update available",
   degraded: "degraded",
-  "local-only": "local only",
+  "local-only": "local install",
   missing: "missing",
   unknown: "unknown",
 };
@@ -43,7 +43,7 @@ function row(item) {
           <p class="text-[0.68rem] text-ink-500 mt-0.5">
             Needed for: ${item.required_for.map(esc).join(", ")}</p>
           ${item.detail?.note
-            ? `<p class="text-[0.68rem] text-warn-300 mt-1">${esc(item.detail.note)}</p>` : ""}
+            ? `<p class="text-[0.68rem] text-ink-500 mt-1">${esc(item.detail.note)}</p>` : ""}
           ${item.remediation
             ? `<p class="text-[0.68rem] text-ink-400 mt-1">${esc(item.remediation)}</p>` : ""}
         </div>
