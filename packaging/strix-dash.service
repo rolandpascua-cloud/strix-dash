@@ -1,0 +1,88 @@
+[Unit]
+Description=strix-dash — AMD Strix Halo control panel
+Documentation=https://github.com/asus-rog-flow-z13/strix-dash
+After=network.target
+# Not required, but the panel is far more useful once these exist.
+Wants=systemd-tmpfiles-setup.service
+
+[Service]
+Type=simple
+User=strix-dash
+Group=strix-dash
+WorkingDirectory=/usr/lib/strix-dash
+ExecStart=/usr/bin/strix-dash-server
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=strix-dash
+
+# Needed to read GPU/NPU device nodes for telemetry.
+SupplementaryGroups=video render
+
+# --- Filesystem -------------------------------------------------------------
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/usr/lib/strix-dash /usr/share/strix-dash /var/snapshots
+ReadWritePaths=/var/log/strix-dash
+# Hardware controls. The "-" prefix marks each as optional so the unit still
+# starts on a machine where the ASUS platform driver is absent.
+ReadWritePaths=-/sys/firmware/acpi/platform_profile
+ReadWritePaths=-/sys/devices/platform/asus-nb-wmi
+ReadWritePaths=-/sys/class/leds/asus::kbd_backlight/brightness
+ReadWritePaths=-/sys/class/power_supply/BAT0/charge_control_end_threshold
+
+# --- Privilege --------------------------------------------------------------
+# Both must be false: this service's whole write path is exec'ing sudo, which
+# is setuid. Everything the service does with those privileges is constrained
+# by /etc/sudoers.d/strix-dash, not by these flags.
+NoNewPrivileges=false
+RestrictSUIDSGID=false
+# Sized for what sudo/apt need as children; the service itself needs none.
+CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_AUDIT_WRITE CAP_DAC_OVERRIDE
+AmbientCapabilities=
+
+# --- Network ----------------------------------------------------------------
+# The dashboard is loopback-only and never reaches the internet. Upstream
+# release checks and package installs run in the helper via sudo, outside this
+# unit's namespace, so egress can be denied outright here.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressAllow=localhost
+IPAddressDeny=any
+
+# --- Kernel / process hardening --------------------------------------------
+ProtectKernelTunables=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+LockPersonality=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RemoveIPC=true
+MemoryDenyWriteExecute=true
+
+# SystemCallFilter is deliberately NOT set, and this is not an oversight.
+#
+# Installing a seccomp filter on an unprivileged service requires the kernel's
+# PR_SET_NO_NEW_PRIVS to be set. systemd applies it whenever SystemCallFilter=
+# is present, REGARDLESS of NoNewPrivileges=false -- `systemctl show` still
+# reports NoNewPrivileges=no while /proc/<pid>/status shows NoNewPrivs:1.
+# The kernel then ignores the setuid bit on /usr/bin/sudo and every privileged
+# control fails with:
+#
+#   sudo: The "no new privileges" flag is set, which prevents sudo from
+#         running as root.
+#
+# Since the NPU power-mode and tuned controls run through sudo, the syscall
+# filter and those controls are mutually exclusive. The vendor's halo-lp
+# reaches the same conclusion and comments the directive out too.
+#
+# SystemCallFilter=@system-service
+# SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

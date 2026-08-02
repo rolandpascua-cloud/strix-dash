@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# strix-dash launcher. Mirrors the vendor's halo-lp-server pattern: source the
+# conf file for overrides, then exec uvicorn against the system python.
+set -e
+
+STRIX_DASH_HOST="127.0.0.1"
+STRIX_DASH_PORT="10001"
+
+if [ -f /etc/strix-dash/strix-dash.conf ]; then
+    # shellcheck source=/dev/null
+    . /etc/strix-dash/strix-dash.conf
+fi
+
+export PYTHONPATH=/usr/lib/strix-dash
+cd /usr/lib/strix-dash
+
+# --workers 1 is REQUIRED, not a default. The in-process cache provides
+# single-flight de-duplication of subprocess calls; extra workers would each
+# get their own cache and multiply the tool invocations.
+exec /usr/bin/python3 -m uvicorn backend.main:app \
+    --host "$STRIX_DASH_HOST" \
+    --port "$STRIX_DASH_PORT" \
+    --workers 1

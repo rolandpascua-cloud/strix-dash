@@ -1,0 +1,40 @@
+# strix-dash privileged commands.
+#
+# Installed to /etc/sudoers.d/strix-dash, mode 0440, root:root.
+# Validated with `visudo -cf` before installation -- a malformed file here can
+# lock every user out of sudo.
+#
+# Scope is deliberately narrow. Anything reachable through sysfs is granted via
+# the tmpfiles.d group ownership instead (see tmpfiles.d/strix-dash.conf.in), so
+# this file only covers the handful of real binaries that have no sysfs path.
+
+# NPU power mode. The five values are enumerated LITERALLY rather than using
+# "--pmode *": a wildcard there would let any argument through, and sudo does
+# not constrain what follows a wildcard.
+Cmnd_Alias STRIX_NPU = \
+    /usr/bin/xrt-smi configure --pmode default, \
+    /usr/bin/xrt-smi configure --pmode powersaver, \
+    /usr/bin/xrt-smi configure --pmode balanced, \
+    /usr/bin/xrt-smi configure --pmode performance, \
+    /usr/bin/xrt-smi configure --pmode turbo
+
+# tuned. The profile name IS a wildcard, so the backend must first validate the
+# requested name against the output of `tuned-adm list` and reject anything not
+# in that set before shelling out.
+Cmnd_Alias STRIX_TUNED = \
+    /usr/sbin/tuned-adm profile *, \
+    /usr/bin/systemctl start tuned
+
+# Requirement installs (download + verify + apt install) and any z13ctl action.
+# Both helpers take a fixed verb plus an identifier, never a URL or a path, and
+# re-resolve everything from their own hardcoded allowlists.
+Cmnd_Alias STRIX_HELPERS = \
+    /usr/lib/strix-dash/backend/strix-dash-req-helper.sh, \
+    /usr/lib/strix-dash/backend/strix-dash-priv-helper.sh
+
+strix-dash ALL=(root) NOPASSWD: STRIX_NPU, STRIX_TUNED, STRIX_HELPERS
+
+# The service has no controlling terminal.
+Defaults!STRIX_NPU      !requiretty
+Defaults!STRIX_TUNED    !requiretty
+Defaults!STRIX_HELPERS  !requiretty

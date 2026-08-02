@@ -1,0 +1,39 @@
+# strix-dash sysfs grants  (TEMPLATE -- rendered by scripts/install.sh)
+#
+# Granting the strix-dash group write access to specific sysfs nodes is
+# preferred over adding sudo rules for them: no privilege escalation path
+# exists at all for these controls, and the set of writable nodes is auditable
+# in one file. This is the same approach the vendor's halo-lp uses for its LED.
+#
+# @FAN_CURVE_HWMON@ is substituted at install time by resolving
+# /sys/class/hwmon/*/name == "asus_custom_fan_curve". The hwmon index is NOT
+# stable across boots, which is why this file is generated rather than shipped.
+#
+# Type Path                                                     Mode UID  GID         Age Arg
+
+d /var/log/strix-dash                                           0750 strix-dash strix-dash - -
+d /var/lib/strix-dash                                           0750 strix-dash strix-dash - -
+d /var/lib/strix-dash/staging                                   0700 root       root       - -
+
+# Performance profile and thermal policy
+z /sys/firmware/acpi/platform_profile                           0664 root strix-dash - -
+z /sys/devices/platform/asus-nb-wmi/throttle_thermal_policy      0664 root strix-dash - -
+z /sys/devices/platform/asus-nb-wmi/panel_od                     0664 root strix-dash - -
+
+# Battery charge limit
+z /sys/class/power_supply/BAT0/charge_control_end_threshold      0664 root strix-dash - -
+
+# Keyboard backlight (0-3 brightness; this machine has no multicolour node)
+z /sys/class/leds/asus::kbd_backlight/brightness                 0664 root strix-dash - -
+
+# NOTE: the ppt_* power-limit nodes are deliberately NOT granted. Every one of
+# them reads "5", which is not plausibly watts, so their units are unconfirmed
+# and v1 exposes them read-only. Uncomment only once the range is verified.
+# z /sys/devices/platform/asus-nb-wmi/ppt_pl1_spl                0664 root strix-dash - -
+# z /sys/devices/platform/asus-nb-wmi/ppt_pl2_sppt               0664 root strix-dash - -
+# z /sys/devices/platform/asus-nb-wmi/ppt_fppt                   0664 root strix-dash - -
+# z /sys/devices/platform/asus-nb-wmi/ppt_apu_sppt               0664 root strix-dash - -
+# z /sys/devices/platform/asus-nb-wmi/ppt_platform_sppt          0664 root strix-dash - -
+
+# Fan curve: 8 points x 2 fans, plus the enable switches.
+@FAN_CURVE_LINES@
