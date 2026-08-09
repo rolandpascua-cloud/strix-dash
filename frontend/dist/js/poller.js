@@ -18,8 +18,12 @@ export class Poller {
     this.activePage = null;
 
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) this.#stopAll();
-      else this.#startPage(this.activePage);
+      if (document.hidden) {
+        this.#stopAll();
+      } else {
+        this.#primePage(this.activePage);   // catch up on what was missed
+        this.#startPage(this.activePage);
+      }
     });
   }
 
@@ -31,7 +35,20 @@ export class Poller {
   setPage(page) {
     this.#stopAll();
     this.activePage = page;
+    // Always fetch ONCE, even while hidden, so a page opened in a background
+    // tab (or rendered headlessly for screenshots) shows data instead of empty
+    // panels and a stuck "connecting" badge. Only the repeating schedule is
+    // gated on visibility -- a hidden tab still must not keep spawning
+    // subprocess-backed polls.
+    this.#primePage(page);
     if (!document.hidden) this.#startPage(page);
+  }
+
+  /** One immediate fetch per job on this page, regardless of visibility. */
+  #primePage(page) {
+    for (const job of this.jobs.values()) {
+      if (job.page === page) this.#tick(job, false);
+    }
   }
 
   /** Run every job for the current page immediately (the Refresh button). */
@@ -42,9 +59,7 @@ export class Poller {
 
   #startPage(page) {
     for (const job of this.jobs.values()) {
-      if (job.page !== page) continue;
-      this.#tick(job, false);           // fire immediately, then schedule
-      this.#schedule(job);
+      if (job.page === page) this.#schedule(job);
     }
   }
 
