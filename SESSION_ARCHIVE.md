@@ -167,12 +167,19 @@ sudo -n xrt-smi configure --pmode performance
 ```
 
 sudo elevation is confirmed working (the memlock and seccomp fixes proved that),
-so this looks like the `amdxdna` driver refusing the ioctl rather than anything
-in strix-dash. It has *never* succeeded from this app. `xrt-smi examine` has
-reported `Power Mode: Performance` at times, so something else on the system can
-set it. **Unresolved.** Settle it with `sudo xrt-smi configure --pmode
-performance` in a terminal: if that fails too, mark the control unavailable with
-the real reason, as `led_rgb` and TDP already are.
+and nothing holds the device, so the `amdxdna` driver is refusing the ioctl
+itself. It has *never* succeeded from this app.
+
+Two hypotheses were tested and rejected: the mode is **not** derived from
+`platform_profile` (that reads `performance` while xrt reports `Default`), and
+no process holds `/dev/accel/accel0`.
+
+**Handled, not fixed.** The failure is now mapped to `NOT_SUPPORTED` naming the
+driver and ioctl, so the UI renders a reason instead of a bare `TOOL_FAILED`
+implying a permissions problem that does not exist. It is deliberately *not*
+hardcoded as unsupported — a kernel that implements the ioctl will start
+working with no code change. Confirm the platform limitation independently with
+`sudo xrt-smi configure --pmode performance`.
 
 **The installed service is behind the repo.** `diff -rq backend
 /usr/lib/strix-dash/backend` reports drift. The fan-curve fallback, the IOMMU

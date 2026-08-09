@@ -289,6 +289,27 @@ async def set_npu_pmode(value: str) -> dict[str, Any]:
         timeout=20,
     )
     if not result.ok:
+        detail = (result.error.detail or {}) if result.error else {}
+        output = str(detail.get("output_excerpt", ""))
+        # amdxdna refuses this ioctl even as root on some kernels. That is a
+        # platform limitation, not a permissions problem on our side -- sudo
+        # elevation is proven by the other privileged controls -- so name it
+        # rather than surfacing a bare TOOL_FAILED the user cannot act on.
+        #
+        # Deliberately NOT hardcoded as unsupported: a kernel that implements
+        # the ioctl will simply start working, with no change here.
+        if "SET_STATE" in output and ("err=-13" in output or "Permission denied" in output):
+            raise errors.ToolError(
+                code=errors.ErrorCode.NOT_SUPPORTED,
+                message="The NPU driver rejected the power-mode change",
+                hint=(
+                    "amdxdna returned EACCES from DRM_IOCTL_AMDXDNA_SET_STATE. "
+                    "The driver refuses this, not sudo -- the other privileged "
+                    "controls work. Confirm independently with: "
+                    "sudo xrt-smi configure --pmode performance"
+                ),
+                detail={"driver": "amdxdna", "ioctl": "DRM_IOCTL_AMDXDNA_SET_STATE"},
+            )
         raise result.error or errors.ToolError(
             code=errors.ErrorCode.TOOL_FAILED, message="xrt-smi configure failed"
         )

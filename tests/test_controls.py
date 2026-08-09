@@ -188,3 +188,66 @@ def test_memlock_reports_a_finite_limit() -> None:
     assert unlimited is False
     assert value == 8 * 1024**2
     assert value < config.MEMLOCK_MINIMUM
+
+
+# ---------------------------------------------------------------------------
+# NPU power mode
+# ---------------------------------------------------------------------------
+
+
+def test_npu_pmode_rejects_values_outside_the_sudoers_allowlist() -> None:
+    """The sudoers rule enumerates five values literally; anything else must
+    be refused before it ever reaches sudo."""
+    import asyncio
+
+    from backend import config
+    from backend.controls import hardware
+
+    with pytest.raises(ToolError) as excinfo:
+        asyncio.run(hardware.set_npu_pmode("ludicrous"))
+    assert excinfo.value.code == ErrorCode.INVALID_VALUE
+    assert "ludicrous" not in config.NPU_PMODES
+
+
+def test_driver_refusal_is_reported_as_unsupported_not_a_generic_failure() -> None:
+    """amdxdna rejects this ioctl even as root on some kernels.
+
+    Surfacing that as TOOL_FAILED tells the user nothing actionable and implies
+    a permissions problem that does not exist -- the other privileged controls
+    work through the same sudo path.
+    """
+    import asyncio
+    from unittest.mock import AsyncMock, patch
+
+    from backend.controls import hardware
+    from backend.core.runner import RunResult
+
+    failure = RunResult(
+        ok=False,
+        exit_code=1,
+        stdout="",
+        stderr="",
+        duration_ms=1.0,
+        argv=["/usr/bin/sudo"],
+        error=ToolError(
+            code=ErrorCode.TOOL_FAILED,
+            message="sudo exited 1",
+            detail={
+                "exit_code": 1,
+                "output_excerpt": (
+                    "XRT build version: 2.21.75\n[xrt-smi] ERROR: "
+                    "DRM_IOCTL_AMDXDNA_SET_STATE IOCTL failed (err=-13): "
+                    "Permission denied"
+                ),
+            },
+        ),
+    )
+
+    with patch.object(hardware, "run", AsyncMock(return_value=failure)):
+        with pytest.raises(ToolError) as excinfo:
+            asyncio.run(hardware.set_npu_pmode("performance"))
+
+    assert excinfo.value.code == ErrorCode.NOT_SUPPORTED
+    assert "amdxdna" in (excinfo.value.hint or "")
+    # It must be a degraded state so the UI renders a reason, not a red error.
+    assert excinfo.value.degraded is True
