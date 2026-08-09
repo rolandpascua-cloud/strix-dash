@@ -4,8 +4,8 @@ Build record for **strix-dash** — what was built, why it is shaped this way, a
 what is still outstanding. Written at the end of the initial build session so a
 later reader (or a later me) does not have to re-derive the reasoning.
 
-**State at close:** 24 commits · 139 files · ~3,950 lines Python, ~1,100 JS ·
-82 tests passing · CI green · public at
+**State at close:** 26 commits · 140 files · ~4,000 lines Python, ~1,100 JS ·
+84 tests passing · CI green · public at
 <https://github.com/rolandpascua-cloud/strix-dash>
 
 ---
@@ -88,7 +88,7 @@ violate it independently.
 
 ### 3.2 The test suite never touches hardware
 
-All 82 tests run against captured fixtures in `tests/fixtures/raw/` — raw tool
+All 84 tests run against captured fixtures in `tests/fixtures/raw/` — raw tool
 output *including* the original ANSI bytes. CI on a hosted runner has no NPU, no
 ROCm and no ASUS platform driver, and still catches parser regressions.
 
