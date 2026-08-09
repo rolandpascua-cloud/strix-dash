@@ -218,15 +218,19 @@ precisely for this reason.
 
 ### Nice to have
 
-- **`mypy` is not in CI.** The plan called for it; only `ruff` (lint + format),
-  `pytest`, `shellcheck`, `visudo -c` and `systemd-analyze verify` run today.
+- ~~`mypy` is not in CI.~~ **Closed.** It turned out to be two annotations
+  across 33 files, not the cleanup I had assumed. CI now runs
+  `mypy backend --ignore-missing-imports`.
 - **`/requirements/{id}/check` is UI-unreachable.** The button was removed
   because it timed out under `IPAddressDeny=any` without the helper. The
   endpoint remains tested and API-reachable; the install flow resolves releases
   itself via `/preview`.
-- **No frontend tests.** The JS is verified by DOM inspection during
-  development, not automatically. The panel renderers are pure functions and
-  would be straightforward to test.
+- ~~No frontend tests.~~ **Partly closed.** `tests/frontend/fmt.test.js`
+  covers the formatters with `node:test` (ships with Node 20, no dependency),
+  including that null renders as an em-dash rather than `0`, that `esc()`
+  neutralises tool output, and that every badge pairs colour with a glyph. The
+  panel renderers still touch `document` and remain untested; extracting their
+  HTML generation from their DOM writes would make them testable too.
 - **`docs/screenshots/` will drift** from the UI without a CI check.
 - **The requirements registry has one installable entry.** The
   `github-release` machinery is general, but only `fastflowlm` uses it; z13ctl

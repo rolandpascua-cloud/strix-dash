@@ -5,6 +5,9 @@
 ```bash
 ./scripts/dev-run.sh      # runs as you on :10001
 python3 -m pytest         # offline; no hardware or network needed
+ruff check backend tests  # lint
+mypy backend --ignore-missing-imports
+node --test tests/frontend/   # frontend formatters
 ./scripts/sync-dist.sh    # after any frontend/src change
 sudo ./scripts/deploy.sh  # push to an installed service
 ```

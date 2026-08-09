@@ -20,7 +20,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install
-        run: pip install --quiet fastapi uvicorn psutil pydantic pytest "ruff==0.16.1"
+        run: pip install --quiet fastapi uvicorn psutil pydantic pytest "ruff==0.16.1" "mypy==2.3.0"
 
       - name: Lint
         run: ruff check backend tests
@@ -28,16 +28,28 @@ jobs:
       - name: Format check
         run: ruff format --check backend tests
 
+      # --ignore-missing-imports because the runtime deps are Debian packages
+      # without stubs; the point here is catching our own type slips.
+      - name: Types
+        run: mypy backend --ignore-missing-imports
+
       # The whole suite runs against captured fixtures: no NPU, no ROCm, no
       # ASUS platform driver, no network. That is why the fixtures exist.
       - name: Tests
         run: python -m pytest -q
 
   shell:
-    name: Shell
+    name: Shell & frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # node:test ships with Node 20; no npm install, no dependencies.
+      - name: Frontend tests
+        run: node --test tests/frontend/
 
       - name: shellcheck
         run: |

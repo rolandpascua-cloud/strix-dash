@@ -3,3 +3,4 @@
 # see README. Pinned so CI and local runs agree.
 pytest
 ruff==0.16.1
+mypy==2.3.0

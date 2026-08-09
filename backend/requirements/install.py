@@ -62,7 +62,7 @@ async def preview(requirement_id: str) -> dict[str, Any]:
             hint=f"Available: {', '.join(release.get('available_assets') or [])}",
         )
 
-    current = next(
+    current: dict[str, Any] = next(
         (i for i in (await detect.detect_all())["items"] if i["id"] == requirement_id),
         {},
     )
@@ -119,7 +119,7 @@ async def perform(requirement_id: str, token: str | None) -> dict[str, Any]:
         )
 
     payload = result.parsed if isinstance(result.parsed, dict) else {}
-    after = next(
+    after: dict[str, Any] = next(
         (i for i in (await detect.detect_all())["items"] if i["id"] == requirement_id),
         {},
     )
